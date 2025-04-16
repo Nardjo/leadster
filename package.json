@@ -1,0 +1,14 @@
+{
+  "name": "leadster",
+  "version": "1.0.0",
+  "description": "Script to find shops in France with Instagram presence",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "type": "module"
+}
