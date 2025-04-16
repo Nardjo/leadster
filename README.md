@@ -5,12 +5,13 @@ Ce script permet d'identifier des boutiques spécifiques en France via OpenStree
 ## Fonctionnalités
 
 1. **Interrogation de l'API Overpass d'OSM** :
-   - Recherche de commerces dans une zone géographique spécifiée (par défaut : "Pays de la Loire")
+   - Recherche de commerces dans une zone géographique spécifiée (par défaut : "Paris")
    - Types de commerces ciblés : vêtements, maroquinerie, chaussures, bijoux, épicerie fine, librairie
    - Filtre pour ne retenir que les commerces avec un site web et une ville
 
 2. **Scraping des sites web** :
-   - Visite de chaque site web trouvé
+   - Vérification préalable des résultats précédents pour éviter de scraper à nouveau les sites déjà traités
+   - Visite de chaque nouveau site web trouvé
    - Recherche de liens vers Instagram
    - Extraction du nom d'utilisateur Instagram
 
@@ -18,6 +19,8 @@ Ce script permet d'identifier des boutiques spécifiques en France via OpenStree
    - Génération d'un fichier JSON avec horodatage
    - Sauvegarde uniquement des commerces avec présence Instagram
    - Format structuré avec nom d'utilisateur, URL du site, ville et type de commerce
+   - Détection et prévention des doublons entre les exécutions successives
+   - Combinaison des résultats précédents avec les nouveaux résultats uniques
 
 ## Prérequis
 
@@ -62,7 +65,11 @@ Vous pouvez modifier les paramètres suivants dans le fichier `index.js` :
 - **Fonctions principales** : 
   - `queryOverpassAPI()` : Interrogation de l'API Overpass
   - `scrapeWebsiteForInstagram()` : Scraping des sites web
-  - `saveResultsToFile()` : Sauvegarde des résultats
+  - `findMostRecentResultsFile()` : Recherche du fichier de résultats le plus récent
+  - `loadDataFromFile()` : Chargement des données d'un fichier JSON
+  - `isShopDuplicate()` : Vérification si un commerce est un doublon
+  - `filterDuplicates()` : Filtrage des doublons dans les nouveaux résultats
+  - `saveResultsToFile()` : Sauvegarde des résultats uniques combinés avec les résultats précédents
 - **Exécution principale** : Fonction `main()` qui orchestre le processus
 
 ## Gestion des erreurs

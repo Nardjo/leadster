@@ -64,6 +64,7 @@ function generateTimestampFilename() {
 
 /**
  * Ensure the results directory exists
+ * @returns {string} - Path to the results directory
  */
 function ensureResultsDirectoryExists() {
   const resultsDir = path.join(__dirname, 'results');
@@ -71,6 +72,52 @@ function ensureResultsDirectoryExists() {
     fs.mkdirSync(resultsDir, { recursive: true });
   }
   return resultsDir;
+}
+
+/**
+ * Find the most recent results file in the results directory
+ * @returns {string|null} - Path to the most recent results file or null if none exists
+ */
+function findMostRecentResultsFile() {
+  try {
+    const resultsDir = ensureResultsDirectoryExists();
+    const files = fs.readdirSync(resultsDir).filter(file => file.endsWith('.json'));
+
+    if (files.length === 0) {
+      return null;
+    }
+
+    // Sort files by creation date (newest first)
+    files.sort((a, b) => {
+      const aTime = fs.statSync(path.join(resultsDir, a)).mtime.getTime();
+      const bTime = fs.statSync(path.join(resultsDir, b)).mtime.getTime();
+      return bTime - aTime;
+    });
+
+    return path.join(resultsDir, files[0]);
+  } catch (error) {
+    console.error('Error finding most recent results file:', error.message);
+    return null;
+  }
+}
+
+/**
+ * Load data from a JSON file
+ * @param {string} filePath - Path to the JSON file
+ * @returns {Array} - Array of objects from the JSON file or empty array if file doesn't exist
+ */
+function loadDataFromFile(filePath) {
+  try {
+    if (!filePath || !fs.existsSync(filePath)) {
+      return [];
+    }
+
+    const data = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error(`Error loading data from ${filePath}:`, error.message);
+    return [];
+  }
 }
 
 /**
@@ -240,18 +287,71 @@ async function scrapeWebsiteForInstagram(shop) {
 }
 
 /**
- * Save results to a JSON file
- * @param {Array} results - Array of shop objects with Instagram handles
+ * Check if a shop already exists in previous results
+ * @param {Object} shop - Shop object with Instagram handle
+ * @param {Array} previousResults - Array of previous shop objects
+ * @returns {boolean} - True if shop already exists, false otherwise
  */
-function saveResultsToFile(results) {
+function isShopDuplicate(shop, previousResults) {
+  return previousResults.some(prevShop => 
+    // Check if Instagram handle matches
+    prevShop.Nom === shop.Nom ||
+    // Or if URL and type match (same shop with different Instagram handle)
+    (prevShop.URL_Site === shop.URL_Site && prevShop.Type_Commerce === shop.Type_Commerce)
+  );
+}
+
+/**
+ * Check if a shop's website is already in previous results
+ * @param {Object} shop - Shop object with website, city, and type
+ * @param {Array} previousResults - Array of previous shop objects
+ * @returns {boolean} - True if shop's website is already in previous results, false otherwise
+ */
+function isWebsiteAlreadyProcessed(shop, previousResults) {
+  return previousResults.some(prevShop => 
+    prevShop.URL_Site === shop.website && prevShop.Type_Commerce === shop.type
+  );
+}
+
+/**
+ * Filter out duplicate shops from new results
+ * @param {Array} newResults - Array of new shop objects
+ * @param {Array} previousResults - Array of previous shop objects
+ * @returns {Array} - Array of unique shop objects
+ */
+function filterDuplicates(newResults, previousResults) {
+  if (!previousResults.length) {
+    return newResults;
+  }
+
+  return newResults.filter(shop => !isShopDuplicate(shop, previousResults));
+}
+
+/**
+ * Save results to a JSON file, avoiding duplicates from previous results
+ * @param {Array} newResults - Array of new shop objects with Instagram handles
+ */
+function saveResultsToFile(newResults) {
   try {
+    // Find most recent results file and load previous data
+    const mostRecentFile = findMostRecentResultsFile();
+    const previousResults = loadDataFromFile(mostRecentFile);
+
+    // Filter out duplicates
+    const uniqueResults = filterDuplicates(newResults, previousResults);
+
+    // Combine previous and new unique results
+    const combinedResults = [...previousResults, ...uniqueResults];
+
+    // Save combined results to a new file
     const resultsDir = ensureResultsDirectoryExists();
     const filename = generateTimestampFilename();
     const filePath = path.join(resultsDir, filename);
 
-    fs.writeFileSync(filePath, JSON.stringify(results, null, 2), 'utf8');
+    fs.writeFileSync(filePath, JSON.stringify(combinedResults, null, 2), 'utf8');
 
-    console.log(`Results saved to ./results/${filename}`);
+    console.log(`Found ${uniqueResults.length} new unique shops (filtered out ${newResults.length - uniqueResults.length} duplicates).`);
+    console.log(`Total of ${combinedResults.length} shops saved to ./results/${filename}`);
   } catch (error) {
     console.error('Error saving results to file:', error.message);
   }
@@ -261,6 +361,11 @@ function saveResultsToFile(results) {
 
 async function main() {
   try {
+    // Load previous results to avoid scraping already processed websites
+    const mostRecentFile = findMostRecentResultsFile();
+    const previousResults = loadDataFromFile(mostRecentFile);
+    console.log(`Loaded ${previousResults.length} shops from previous results.`);
+
     // Step 1: Query Overpass API
     const shops = await queryOverpassAPI();
 
@@ -271,8 +376,26 @@ async function main() {
 
     // Step 2: Scrape websites for Instagram links
     const results = [];
+    let skippedCount = 0;
 
     for (const shop of shops) {
+      // Check if this website is already in previous results
+      if (isWebsiteAlreadyProcessed(shop, previousResults)) {
+        // Find all previous results for this website
+        const existingResults = previousResults.filter(prevShop => 
+          prevShop.URL_Site === shop.website && prevShop.Type_Commerce === shop.type
+        );
+
+        // Add existing results to new results
+        if (existingResults.length > 0) {
+          results.push(...existingResults);
+          console.log(`Skipping scraping for ${shop.website} (already processed)`);
+          skippedCount++;
+          continue; // Skip to next shop
+        }
+      }
+
+      // If not already processed, scrape the website
       const result = await scrapeWebsiteForInstagram(shop);
 
       if (result) {
@@ -284,6 +407,7 @@ async function main() {
       await sleep(SCRAPING_DELAY);
     }
 
+    console.log(`Skipped scraping ${skippedCount} websites (already processed in previous runs).`);
     console.log(`Found ${results.length} shops with Instagram presence.`);
 
     // Step 3: Save results to file
