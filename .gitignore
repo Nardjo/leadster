@@ -2,9 +2,6 @@
 node_modules/
 .pnpm-store/
 
-# Results
-results/
-
 # Logs
 logs
 *.log
