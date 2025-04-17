@@ -75,7 +75,8 @@ Avant d'utiliser le script d'upload, vous devez configurer vos identifiants Airt
    - `Ville`
    - `Type de Commerce`
    - `Date d'ajout`
-   - `Dernier contact` (sera vide lors de l'upload initial)
+   - `Dernier contact` (sera défini comme null lors de l'upload initial, ce champ doit être configuré comme un champ de type Date dans Airtable)
+   - `Statut` (sera défini comme "Non contacter" lors de l'upload initial)
 
 2. Copiez le fichier `.env.example` en `.env` et configurez vos identifiants Airtable :
    ```bash

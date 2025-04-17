@@ -173,7 +173,8 @@ async function uploadToAirtable(data) {
         'Site web': shop.URL_Site,
         'Ville': shop.Ville,
         'Type de Commerce': shop.Type_Commerce,
-        'Dernier contact': '',
+        'Dernier contact': null,
+        'Statut': 'Non contacter',
       }
     }));
 
