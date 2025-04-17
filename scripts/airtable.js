@@ -3,15 +3,16 @@
  * 
  * This script uploads shop data from results files to Airtable.
  * It can either upload the most recent results file or a specific file.
+ * It uses the Airtable helper functions from utils/airtableHelpers.js.
  */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import Airtable from 'airtable';
 import readline from 'readline';
 import * as dotenv from 'dotenv';
+import { uploadToAirtable, fetchAirtableRecords, isShopInAirtable } from '../utils/airtableHelpers.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -19,19 +20,6 @@ dotenv.config();
 // Get the directory name using ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// ===== CONFIGURATION =====
-
-// Airtable configuration - replace with your actual values
-const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY || 'YOUR_AIRTABLE_API_KEY';
-const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'YOUR_AIRTABLE_BASE_ID';
-const AIRTABLE_TABLE_NAME = process.env.AIRTABLE_TABLE_NAME || 'Shops';
-
-console.log(AIRTABLE_API_KEY, AIRTABLE_BASE_ID);
-
-// Optional Airtable configuration
-const AIRTABLE_ENDPOINT_URL = process.env.AIRTABLE_ENDPOINT_URL; // Default: undefined (uses Airtable's default endpoint)
-const AIRTABLE_REQUEST_TIMEOUT = process.env.AIRTABLE_REQUEST_TIMEOUT ? parseInt(process.env.AIRTABLE_REQUEST_TIMEOUT) : 300000; // Default: 5 minutes
 
 // ===== HELPER FUNCTIONS =====
 
@@ -136,97 +124,6 @@ function askQuestion(rl, question) {
       resolve(answer);
     });
   });
-}
-
-/**
- * Upload data to Airtable
- * @param {Array} data - Array of shop objects to upload
- * @returns {Promise<number>} - Number of records created
- */
-async function uploadToAirtable(data) {
-  try {
-    // Configure Airtable
-    const config = {
-      apiKey: AIRTABLE_API_KEY
-    };
-
-    // Add optional configuration parameters if they exist
-    if (AIRTABLE_ENDPOINT_URL) {
-      config.endpointUrl = AIRTABLE_ENDPOINT_URL;
-    }
-
-    if (AIRTABLE_REQUEST_TIMEOUT) {
-      config.requestTimeout = AIRTABLE_REQUEST_TIMEOUT;
-    }
-
-    Airtable.configure(config);
-
-    const base = Airtable.base(AIRTABLE_BASE_ID);
-    const table = base(AIRTABLE_TABLE_NAME);
-
-    console.log(`Uploading ${data.length} records to Airtable...`);
-
-    // Prepare records for batch creation
-    const records = data.map(shop => ({
-      fields: {
-        'Nom': shop.Nom,
-        'Site web': shop.URL_Site,
-        'Ville': shop.Ville,
-        'Type de Commerce': shop.Type_Commerce,
-        'Dernier contact': null,
-        'Statut': 'Non contacter',
-      }
-    }));
-
-    // Upload in batches of 10 (Airtable's limit)
-    let createdCount = 0;
-    const batchSize = 10;
-
-    for (let i = 0; i < records.length; i += batchSize) {
-      try {
-        const batch = records.slice(i, i + batchSize);
-        const createdRecords = await table.create(batch);
-
-        createdCount += createdRecords.length;
-        console.log(`Uploaded ${createdCount}/${records.length} records...`);
-
-        // Add a small delay between batches to avoid rate limiting
-        if (i + batchSize < records.length) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
-      } catch (batchError) {
-        console.error(`Error uploading batch ${i/batchSize + 1}:`, batchError.message);
-
-        // Try to continue with the next batch instead of failing completely
-        console.log('Continuing with next batch...');
-      }
-    }
-
-    console.log(`Successfully uploaded ${createdCount} records to Airtable!`);
-    return createdCount;
-  } catch (error) {
-    console.error('Error uploading to Airtable:', error.message);
-
-    // Handle different types of errors
-    if (error.statusCode === 401 || error.error === 'AUTHENTICATION_REQUIRED') {
-      console.error('Authentication error: Please check your Airtable API key');
-    } else if (error.statusCode === 404 || error.error === 'NOT_FOUND') {
-      console.error('Not found error: Please check your Airtable Base ID and Table name');
-    } else if (error.statusCode === 413 || error.error === 'REQUEST_TOO_LARGE') {
-      console.error('Request too large: Try reducing the batch size');
-    } else if (error.statusCode === 429 || error.error === 'TOO_MANY_REQUESTS') {
-      console.error('Rate limit exceeded: Try again later or reduce the frequency of requests');
-    } else if (error.statusCode >= 500) {
-      console.error('Airtable server error: Please try again later');
-    }
-
-    // Log additional error details if available
-    if (error.response && error.response.data) {
-      console.error('Airtable error details:', error.response.data);
-    }
-
-    return 0;
-  }
 }
 
 // ===== MAIN EXECUTION =====

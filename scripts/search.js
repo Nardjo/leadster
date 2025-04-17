@@ -14,6 +14,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { fetchAirtableRecords, isShopInAirtable } from '../utils/airtableHelpers.js';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Get the directory name using ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -22,7 +27,7 @@ const __dirname = dirname(__filename);
 // ===== CONFIGURATION =====
 
 // Geographic area to search (can be modified)
-const SEARCH_AREA = "Paris";
+const SEARCH_AREA = "Montpellier";
 
 // Delay between website scraping requests (in milliseconds)
 const SCRAPING_DELAY = 1000;
@@ -317,28 +322,33 @@ function isWebsiteAlreadyProcessed(shop, previousResults) {
  * Filter out duplicate shops from new results
  * @param {Array} newResults - Array of new shop objects
  * @param {Array} previousResults - Array of previous shop objects
+ * @param {Array} airtableRecords - Array of Airtable records
  * @returns {Array} - Array of unique shop objects
  */
-function filterDuplicates(newResults, previousResults) {
-  if (!previousResults.length) {
+function filterDuplicates(newResults, previousResults, airtableRecords = []) {
+  if (!previousResults.length && !airtableRecords.length) {
     return newResults;
   }
 
-  return newResults.filter(shop => !isShopDuplicate(shop, previousResults));
+  return newResults.filter(shop => 
+    !isShopDuplicate(shop, previousResults) && 
+    !isShopInAirtable(shop, airtableRecords)
+  );
 }
 
 /**
- * Save results to a JSON file, avoiding duplicates from previous results
+ * Save results to a JSON file, avoiding duplicates from previous results and Airtable
  * @param {Array} newResults - Array of new shop objects with Instagram handles
+ * @param {Array} airtableRecords - Array of Airtable records
  */
-function saveResultsToFile(newResults) {
+function saveResultsToFile(newResults, airtableRecords = []) {
   try {
     // Find most recent results file and load previous data
     const mostRecentFile = findMostRecentResultsFile();
     const previousResults = loadDataFromFile(mostRecentFile);
 
-    // Filter out duplicates
-    const uniqueResults = filterDuplicates(newResults, previousResults);
+    // Filter out duplicates from both previous results and Airtable
+    const uniqueResults = filterDuplicates(newResults, previousResults, airtableRecords);
 
     // Combine previous and new unique results
     const combinedResults = [...previousResults, ...uniqueResults];
@@ -366,6 +376,10 @@ async function main() {
     const previousResults = loadDataFromFile(mostRecentFile);
     console.log(`Loaded ${previousResults.length} shops from previous results.`);
 
+    // Fetch records from Airtable to check for duplicates
+    const airtableRecords = await fetchAirtableRecords();
+    console.log(`Loaded ${airtableRecords.length} shops from Airtable.`);
+
     // Step 1: Query Overpass API
     const shops = await queryOverpassAPI();
 
@@ -389,10 +403,23 @@ async function main() {
         // Add existing results to new results
         if (existingResults.length > 0) {
           results.push(...existingResults);
-          console.log(`Skipping scraping for ${shop.website} (already processed)`);
+          console.log(`Skipping scraping for ${shop.website} (already processed in previous JSON results)`);
           skippedCount++;
           continue; // Skip to next shop
         }
+      }
+
+      // Check if this shop already exists in Airtable
+      // First, create a temporary shop object with the format expected by isShopInAirtable
+      const tempShop = {
+        URL_Site: shop.website,
+        Type_Commerce: shop.type
+      };
+
+      if (isShopInAirtable(tempShop, airtableRecords)) {
+        console.log(`Skipping scraping for ${shop.website} (already exists in Airtable)`);
+        skippedCount++;
+        continue; // Skip to next shop
       }
 
       // If not already processed, scrape the website
@@ -412,7 +439,7 @@ async function main() {
 
     // Step 3: Save results to file
     if (results.length > 0) {
-      saveResultsToFile(results);
+      saveResultsToFile(results, airtableRecords);
     } else {
       console.log('No shops with Instagram presence found. No file created.');
     }

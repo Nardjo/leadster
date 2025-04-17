@@ -45,10 +45,16 @@ Ce script permet d'identifier des boutiques spécifiques en France via OpenStree
 
 ### Script principal de recherche
 
-Exécutez le script principal avec la commande :
+Exécutez le script principal avec l'une des commandes suivantes :
 
 ```bash
 pnpm start
+```
+
+ou
+
+```bash
+pnpm search-shops
 ```
 
 Les résultats seront sauvegardés dans le dossier `./results` avec un nom de fichier au format `YYYY-MM-DD_HH-mm.json`.
@@ -96,7 +102,7 @@ Avant d'utiliser le script d'upload, vous devez configurer vos identifiants Airt
 
 ## Configuration
 
-Vous pouvez modifier les paramètres suivants dans le fichier `index.js` :
+Vous pouvez modifier les paramètres suivants dans le fichier `search.js` :
 
 - `SEARCH_AREA` : Zone géographique à rechercher (par défaut : "Pays de la Loire")
 - `SCRAPING_DELAY` : Délai entre les requêtes de scraping (en millisecondes)
@@ -104,7 +110,7 @@ Vous pouvez modifier les paramètres suivants dans le fichier `index.js` :
 
 ## Structure du code
 
-### Script principal (index.js)
+### Script principal (search.js)
 
 - **Configuration** : Paramètres facilement modifiables
 - **Fonctions auxiliaires** : Fonctions utilitaires (génération de nom de fichier, extraction de handle Instagram, etc.)
@@ -147,6 +153,41 @@ Le script d'upload Airtable inclut une gestion des erreurs pour :
 - La validation des entrées utilisateur
 - Les requêtes à l'API Airtable
 - L'upload des données par lots
+
+## Tests unitaires
+
+Le projet inclut des tests unitaires utilisant [Vitest](https://vitest.dev/), un framework de test rapide et léger pour JavaScript.
+
+### Exécution des tests
+
+Pour exécuter les tests, utilisez les commandes suivantes :
+
+```bash
+# Exécuter tous les tests une fois
+pnpm test
+
+# Exécuter les tests en mode watch (relance automatiquement lors des modifications)
+pnpm test:watch
+```
+
+### Structure des tests
+
+Les tests sont organisés par module :
+
+- `tests/index.test.js` : Tests pour les fonctionnalités principales dans `search.js`
+- `tests/airtable.test.js` : Tests pour l'intégration Airtable dans `airtable.js`
+
+### Fonctions testées
+
+Les tests couvrent les fonctions critiques du projet, notamment :
+
+- Extraction des handles Instagram à partir des URLs
+- Génération de noms de fichiers horodatés
+- Détection et filtrage des doublons
+- Gestion des fichiers de résultats
+- Chargement et analyse des données JSON
+
+Pour plus d'informations sur les tests, consultez le fichier `tests/README.md`.
 
 ## Licence
 

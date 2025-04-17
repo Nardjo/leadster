@@ -2,17 +2,21 @@
   "name": "leadster",
   "version": "1.0.0",
   "description": "Script to find shops in France with Instagram presence",
-  "main": "index.js",
+  "main": "scripts/search.js",
   "scripts": {
-    "start": "node index.js",
-    "airtable": "node airtable.js",
-    "airtable-upload": "node airtable.js"
+    "search-lead": "node ./scripts/search.js",
+    "airtable": "node ./scripts/airtable.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "axios": "^1.6.2",
     "cheerio": "^1.0.0-rc.12",
     "airtable": "^0.12.2",
     "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0"
   },
   "type": "module"
 }
