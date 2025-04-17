@@ -16,6 +16,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { fetchAirtableRecords, isShopInAirtable } from '../utils/airtableHelpers.js';
 import * as dotenv from 'dotenv';
+import EXCLUDED_BRANDS from '../utils/brandsExcluded.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -53,6 +54,35 @@ const SHOP_TYPES = [
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
+ * Check if a shop name or brand matches any of the excluded brands
+ * @param {Object} tags - Tags object from OpenStreetMap element
+ * @returns {boolean} - True if shop should be excluded, false otherwise
+ */
+function isExcludedBrand(tags) {
+  // Check common name/brand fields in OpenStreetMap
+  const nameFields = ['name', 'brand', 'operator', 'shop_name'];
+
+  for (const field of nameFields) {
+    if (tags[field]) {
+      const shopName = tags[field].toLowerCase().trim();
+
+      // Check if shop name matches any excluded brand
+      for (const brand of EXCLUDED_BRANDS) {
+        const excludedBrand = brand.toLowerCase().trim();
+
+        // Check for exact match or if shop name contains the brand
+        if (shopName === excludedBrand || shopName.includes(excludedBrand)) {
+          console.log(`Excluding shop: ${tags[field]} (matches excluded brand: ${brand})`);
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * Generate a timestamp-based filename in the format YYYY-MM-DD_HH-mm.json
  * @returns {string} - Formatted filename
  */
@@ -72,7 +102,7 @@ function generateTimestampFilename() {
  * @returns {string} - Path to the results directory
  */
 function ensureResultsDirectoryExists() {
-  const resultsDir = path.join(__dirname, 'results');
+  const resultsDir = path.join(__dirname, '../results');
   if (!fs.existsSync(resultsDir)) {
     fs.mkdirSync(resultsDir, { recursive: true });
   }
@@ -206,6 +236,9 @@ relation["${key}"="${value}"]["website"]["addr:city"](area.searchArea);`;
     for (const element of response.data.elements) {
       // Skip elements without tags or website
       if (!element.tags || !element.tags.website) continue;
+
+      // Skip excluded brands (major chains)
+      if (isExcludedBrand(element.tags)) continue;
 
       // Find the shop type
       let shopType = null;

@@ -1,0 +1,626 @@
+[
+  {
+    "Nom": "librairie_labreche",
+    "URL_Site": "https://www.la-breche.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "unisportstorefr",
+    "URL_Site": "https://unisportstore.fr",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "accounts",
+    "URL_Site": "https://khara-tuki.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Bijoux"
+  },
+  {
+    "Nom": "cahiercentral",
+    "URL_Site": "https://cahiercentral.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "alivrouvert",
+    "URL_Site": "http://www.alivrouvert.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "librairie_lestraversees",
+    "URL_Site": "https://www.lestraversees.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "boulinier_officiel",
+    "URL_Site": "https://www.boulinier.com/librairies-boulinier",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "librairiedeparis",
+    "URL_Site": "https://www.librairie-de-paris.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "album_bd",
+    "URL_Site": "https://www.album.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "citadiumbeaubourg",
+    "URL_Site": "https://www.citadium.com/fr/fr/magasin-citadium-paris-beaubourg",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "merciparis",
+    "URL_Site": "https://merci-merci.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "ububijouxparis",
+    "URL_Site": "https://www.ububijoux.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Bijoux"
+  },
+  {
+    "Nom": "book_off_fr",
+    "URL_Site": "https://lingonbook.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "inderwear",
+    "URL_Site": "https://www.inderwear.com/content/32-megastore-paris-marais",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "violetteandco.librairie",
+    "URL_Site": "https://www.violetteandco.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "librairie_delamain_paris",
+    "URL_Site": "https://www.librairie-delamain.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "zespa_official",
+    "URL_Site": "https://zespa.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Chaussures"
+  },
+  {
+    "Nom": "rubrique_a_bulles",
+    "URL_Site": "https://www.canalbd.net/la-rubrique-a-bulles",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "danyberd.officiel",
+    "URL_Site": "https://www.danyberd.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "hm",
+    "URL_Site": "https://www2.hm.com/fr_fr/index.html",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "majeparis",
+    "URL_Site": "https://fr.maje.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "wooyoungmi",
+    "URL_Site": "https://www.wooyoungmi.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "ikksofficial",
+    "URL_Site": "https://www.ikks.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "lilicabas",
+    "URL_Site": "https://www.lilicabas.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "saintjames",
+    "URL_Site": "https://fr.saint-james.com/blogs/boutiques#315607",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "boulinier_officiel",
+    "URL_Site": "https://www.boulinier.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "bourgine",
+    "URL_Site": "https://www.bourgine.net/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "librairieduquebec",
+    "URL_Site": "https://www.librairieduquebec.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "officinegenerale",
+    "URL_Site": "https://www.officinegenerale.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "maisonernest",
+    "URL_Site": "https://www.maisonernest.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Chaussures"
+  },
+  {
+    "Nom": "lesrituelles",
+    "URL_Site": "https://www.lesrituelles.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "metal_flaque",
+    "URL_Site": "https://www.metalflaque.fr",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "hastparis",
+    "URL_Site": "https://www.hast.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "catofashions",
+    "URL_Site": "https://stores.catofashions.com/tx/paris/3568-lamar-avenue",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "librairiealmora",
+    "URL_Site": "https://www.almora.fr",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "librairiecalypso",
+    "URL_Site": "https://librairiecalypso.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "jailu_editions",
+    "URL_Site": "https://www.jailu.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "haut_district",
+    "URL_Site": "https://hautdistrict.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "bullesenvrac",
+    "URL_Site": "https://www.canalbd.net/bulles-en-vrac",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "emmaus_alternatives",
+    "URL_Site": "https://www.emmaus-alternatives.org/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "ed.magellan_et_cie",
+    "URL_Site": "https://www.editions-magellan.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "book_off_fr",
+    "URL_Site": "https://lingonbook.fr/nos-boutiques-bookoff/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "elisabethvfurtenbach",
+    "URL_Site": "https://elisabethvf.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "librairiesanstitre",
+    "URL_Site": "https://librairiesanstitre.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "wedressfair",
+    "URL_Site": "https://www.wedressfair.fr",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "tailortrucks",
+    "URL_Site": "https://tailortrucks.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "lapetiterockette",
+    "URL_Site": "https://www.lapetiterockette.org",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "17841406484072785",
+    "URL_Site": "https://www.lenuagevert.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "librairie_utopia",
+    "URL_Site": "https://librairie-utopia.org/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "despetitshauts",
+    "URL_Site": "https://despetitshauts.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "mariesixtineparis",
+    "URL_Site": "https://marie-sixtine.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "carharttwip",
+    "URL_Site": "https://www.carhartt-wip.com/stores/5894",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "leregard_agjc",
+    "URL_Site": "https://ag-jc.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Bijoux"
+  },
+  {
+    "Nom": "lablousedelyon",
+    "URL_Site": "https://lablousedelyon.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "antikbatik_paris",
+    "URL_Site": "https://www.antikbatik.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "librairiesciencespo",
+    "URL_Site": "https://www.librairie-sciencespo.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "lexception",
+    "URL_Site": "https://www.lexception.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "parkslabel",
+    "URL_Site": "https://parkslabelstore.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "lechemiseur",
+    "URL_Site": "https://lechemiseur.fr",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "beaubienstore",
+    "URL_Site": "https://beaubienstore.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "lafaurieparis",
+    "URL_Site": "https://lafaurieparis.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "vavada.inst",
+    "URL_Site": "https://stellapardo.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "noyoco",
+    "URL_Site": "https://noyoco.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "courbetofficial",
+    "URL_Site": "https://courbet.com",
+    "Ville": "Paris",
+    "Type_Commerce": "Bijoux"
+  },
+  {
+    "Nom": "smdbooks",
+    "URL_Site": "https://www.smdbooks.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "exaltationparis",
+    "URL_Site": "https://www.exaltation.fr/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "sixtysixorigin",
+    "URL_Site": "https://www.66origin.com/",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "superdry",
+    "URL_Site": "https://stores.superdry.com/fr/paris/forum-des-halles",
+    "Ville": "Paris",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "canal_bd",
+    "URL_Site": "https://www.canalbd.net/azimuts",
+    "Ville": "Montpellier",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "planetesinterdites",
+    "URL_Site": "https://planetes-interdites.com/",
+    "Ville": "Montpellier",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "orchestra_official",
+    "URL_Site": "https://fr.shop-orchestra.com",
+    "Ville": "Saint-Aunès",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "librairie.lechappee.belle",
+    "URL_Site": "https://www.lechappeebelle.fr/",
+    "Ville": "Sète",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "escassut_boutique",
+    "URL_Site": "https://www.escassut.fr/",
+    "Ville": "Montpellier",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "espace_des_marques",
+    "URL_Site": "https://www.espace-des-marques.com",
+    "Ville": "Pérols",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "levestiairedalex",
+    "URL_Site": "https://levestiairedalex.fr",
+    "Ville": "Lunel",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "lilouplaisir",
+    "URL_Site": "https://www.lilouplaisir.com/",
+    "Ville": "Montpellier",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "grain_de_malice",
+    "URL_Site": "https://www.graindemalice.fr",
+    "Ville": "Lunel",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "littlemarcelofficiel",
+    "URL_Site": "https://littlemarcel.com",
+    "Ville": "La Grande-Motte",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "littlemarcelofficiel",
+    "URL_Site": "https://www.littlemarcel.com",
+    "Ville": "La Grande-Motte",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "chauss34",
+    "URL_Site": "http://www.chauss34.fr",
+    "Ville": "Saint-Aunès",
+    "Type_Commerce": "Chaussures"
+  },
+  {
+    "Nom": "degriff.stock",
+    "URL_Site": "https://magasin.degriffstock.com",
+    "Ville": "Castelnau-le-Lez",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "bouncewear",
+    "URL_Site": "https://bouncewear.com",
+    "Ville": "Lattes",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "zeeman_france",
+    "URL_Site": "https://www.zeeman.com/fr/store/lunel-91-avenue-des-4-seisons-91",
+    "Ville": "Lunel",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "boutique_tempo",
+    "URL_Site": "https://tempo-boutique.fr/",
+    "Ville": "Lunel",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "librairieab",
+    "URL_Site": "https://librairie-ab.com/",
+    "Ville": "Lunel",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "capricedefilles34",
+    "URL_Site": "https://capricedefilles.com",
+    "Ville": "Mauguio",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "the_royal_racer_officiel",
+    "URL_Site": "https://www.theroyalracer.com",
+    "Ville": "Mauguio",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "letoucanreveur.fr",
+    "URL_Site": "https://www.letoucanreveur.fr/",
+    "Ville": "Castelnau-le-Lez",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "happinessconceptstore",
+    "URL_Site": "https://www.happinessconceptstore.fr",
+    "Ville": "Lunel",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "canal_bd",
+    "URL_Site": "https://www.canalbd.net/la-malle-a-bulles",
+    "Ville": "Lunel",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "eastereggmontpellier",
+    "URL_Site": "https://easteregg-montpellier.fr/",
+    "Ville": "Montpellier",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "lepluchelivres",
+    "URL_Site": "https://www.placedeslibraires.fr/magasins/castelnau-le-lez/L-Epluche-Livres-6483/",
+    "Ville": "Castelnau-le-Lez",
+    "Type_Commerce": "Librairie"
+  },
+  {
+    "Nom": "dessusdessous_official",
+    "URL_Site": "https://www.dessus-dessous.fr",
+    "Ville": "Lunel",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "erbe_chaussures",
+    "URL_Site": "https://www.chaussures-erbe.fr",
+    "Ville": "Pérols",
+    "Type_Commerce": "Chaussures"
+  },
+  {
+    "Nom": "christinelaurefr",
+    "URL_Site": "https://www.christine-laure.fr",
+    "Ville": "Pérols",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "laboiteabijouxperols",
+    "URL_Site": "https://laboiteabijoux.company.site",
+    "Ville": "Pérols",
+    "Type_Commerce": "Bijoux"
+  },
+  {
+    "Nom": "devred",
+    "URL_Site": "https://www.devred.com",
+    "Ville": "Lattes",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "calzedonia",
+    "URL_Site": "https://www.calzedonia.com",
+    "Ville": "Lattes",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "grain_de_malice",
+    "URL_Site": "https://boutiques.graindemalice.fr/occitanie/herault/saint-jean-de-vedas/st-jean-de-vedas",
+    "Ville": "Saint-Jean-de-Védas",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "grain_de_malice",
+    "URL_Site": "https://www.graindemalice.fr",
+    "Ville": "Le Crès",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "eram_officiel",
+    "URL_Site": "https://www.eram.fr",
+    "Ville": "Saint-Aunès",
+    "Type_Commerce": "Chaussures"
+  },
+  {
+    "Nom": "devred",
+    "URL_Site": "https://www.devred.com",
+    "Ville": "Saint-Aunès",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "rougegorgelingerie",
+    "URL_Site": "https://www.rougegorge.com/nos-magasins/magasin-st-aunes-6523",
+    "Ville": "Saint-Aunès",
+    "Type_Commerce": "Vêtements"
+  },
+  {
+    "Nom": "christinelaurefr",
+    "URL_Site": "https://www.christine-laure.fr",
+    "Ville": "Saint-Aunès",
+    "Type_Commerce": "Vêtements"
+  }
+]

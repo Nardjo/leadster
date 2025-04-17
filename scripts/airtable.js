@@ -28,7 +28,7 @@ const __dirname = dirname(__filename);
  * @returns {string} - Path to the results directory
  */
 function ensureResultsDirectoryExists() {
-  const resultsDir = path.join(__dirname, 'results');
+  const resultsDir = path.join(__dirname, '../results');
   if (!fs.existsSync(resultsDir)) {
     fs.mkdirSync(resultsDir, { recursive: true });
   }
@@ -136,8 +136,8 @@ async function main() {
     console.log('--------------------------------');
 
     // Check if Airtable API key and base ID are set
-    if (AIRTABLE_API_KEY === 'YOUR_AIRTABLE_API_KEY' || AIRTABLE_BASE_ID === 'YOUR_AIRTABLE_BASE_ID') {
-      console.error('Error: Please set your Airtable API key and base ID in the script or as environment variables.');
+    if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
+      console.error('Error: Please set your Airtable API key and base ID in the .env file.');
       rl.close();
       return;
     }

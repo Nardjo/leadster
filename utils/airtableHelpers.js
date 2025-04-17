@@ -172,6 +172,26 @@ export async function fetchAirtableRecords() {
 }
 
 /**
+ * Normalize URL for comparison
+ * @param {string} url - URL to normalize
+ * @returns {string} - Normalized URL
+ */
+function normalizeUrl(url) {
+  if (!url) return '';
+
+  // Convert to lowercase
+  let normalized = url.toLowerCase();
+
+  // Remove protocol (http://, https://)
+  normalized = normalized.replace(/^https?:\/\//, '');
+
+  // Remove trailing slash
+  normalized = normalized.replace(/\/$/, '');
+
+  return normalized;
+}
+
+/**
  * Check if a shop already exists in Airtable
  * @param {Object} shop - Shop object with Instagram handle, URL, and type
  * @param {Array} airtableRecords - Array of Airtable records
@@ -182,10 +202,27 @@ export function isShopInAirtable(shop, airtableRecords) {
     return false;
   }
 
-  return airtableRecords.some(record => 
-    // Check if Instagram handle matches
-    record.Nom === shop.Nom ||
-    // Or if URL and type match (same shop with different Instagram handle)
-    (record.URL_Site === shop.URL_Site && record.Type_Commerce === shop.Type_Commerce)
-  );
+  // Normalize the shop URL
+  const normalizedShopUrl = normalizeUrl(shop.URL_Site);
+
+  return airtableRecords.some(record => {
+    // Check if Instagram handle matches (if both have Nom property)
+    if (shop.Nom && record.Nom && record.Nom === shop.Nom) {
+      return true;
+    }
+
+    // If URLs are different, they're not the same shop
+    const normalizedRecordUrl = normalizeUrl(record.URL_Site);
+    if (normalizedRecordUrl !== normalizedShopUrl) {
+      return false;
+    }
+
+    // If URLs match but types are different, they're not the same shop
+    if (record.Type_Commerce !== shop.Type_Commerce) {
+      return false;
+    }
+
+    // If we get here, both URL and type match
+    return true;
+  });
 }
