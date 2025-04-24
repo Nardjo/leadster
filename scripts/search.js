@@ -1,11 +1,5 @@
 /**
  * Leadster - Script to find shops in France with Instagram presence
- * 
- * This script:
- * 1. Queries Overpass API to find shops in a specified region of France
- * 2. Extracts website URLs, city, and shop type for shops that have a website
- * 3. Scrapes each website to find Instagram links
- * 4. Saves only shops with Instagram presence to a JSON file with a timestamp
  */
 
 import axios from 'axios';
@@ -17,470 +11,138 @@ import { dirname } from 'path';
 import { fetchAirtableRecords, isShopInAirtable } from '../utils/airtableHelpers.js';
 import * as dotenv from 'dotenv';
 import EXCLUDED_BRANDS from '../utils/brandsExcluded.js';
+import pLimit from 'p-limit';
+import axiosRetry from 'axios-retry';
+import { SEARCH_AREAS, SCRAPING_DELAY, CONCURRENCY, RETRY_COUNT, RETRY_DELAY_MS, SHOP_TYPES } from '../utils/constants.js';
 
-// Load environment variables from .env file
 dotenv.config();
 
-// Get the directory name using ES modules
+/* ===== FICHIERS & PATH ===== */
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname  = dirname(__filename);
 
-// ===== CONFIGURATION =====
+/* ===== AXIOS RETRY GLOBAL ===== */
+axiosRetry(axios, {
+  retries: RETRY_COUNT,
+  retryDelay: (_err, n) => RETRY_DELAY_MS * 2 ** (n - 1),
+  retryCondition: err =>
+      axiosRetry.isNetworkOrIdempotentRequestError(err) || err.code === 'ECONNABORTED'
+});
 
-// Geographic area to search (can be modified)
-const SEARCH_AREA = "Montpellier";
+/* ===== UTILS ===== */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// Delay between website scraping requests (in milliseconds)
-const SCRAPING_DELAY = 1000;
-
-// Shop types to search for with their French labels
-const SHOP_TYPES = [
-  { tag: "shop=clothes", label: "Vêtements" },
-  { tag: "shop=bags", label: "Maroquinerie" },
-  { tag: "shop=shoes", label: "Chaussures" },
-  { tag: "shop=jewelry", label: "Bijoux" },
-  { tag: "craft=jeweller", label: "Bijoux" },
-  { tag: "shop=delicatessen", label: "Épicerie Fine" },
-  { tag: "shop=books", label: "Librairie" }
-];
-
-// ===== HELPER FUNCTIONS =====
-
-/**
- * Sleep function to add delay between requests
- * @param {number} ms - Milliseconds to sleep
- * @returns {Promise} - Promise that resolves after the specified time
- */
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-/**
- * Check if a shop name or brand matches any of the excluded brands
- * @param {Object} tags - Tags object from OpenStreetMap element
- * @returns {boolean} - True if shop should be excluded, false otherwise
- */
 function isExcludedBrand(tags) {
-  // Check common name/brand fields in OpenStreetMap
-  const nameFields = ['name', 'brand', 'operator', 'shop_name'];
-
-  for (const field of nameFields) {
-    if (tags[field]) {
-      const shopName = tags[field].toLowerCase().trim();
-
-      // Check if shop name matches any excluded brand
-      for (const brand of EXCLUDED_BRANDS) {
-        const excludedBrand = brand.toLowerCase().trim();
-
-        // Check for exact match or if shop name contains the brand
-        if (shopName === excludedBrand || shopName.includes(excludedBrand)) {
-          console.log(`Excluding shop: ${tags[field]} (matches excluded brand: ${brand})`);
-          return true;
-        }
-      }
-    }
+  const fields = ['name', 'brand', 'operator', 'shop_name'];
+  for (const field of fields) {
+    if (!tags[field]) continue;
+    const lower = tags[field].toLowerCase();
+    if (EXCLUDED_BRANDS.some(b => lower.includes(b.toLowerCase()))) return true;
   }
-
   return false;
 }
 
-/**
- * Generate a timestamp-based filename in the format YYYY-MM-DD_HH-mm.json
- * @returns {string} - Formatted filename
- */
-function generateTimestampFilename() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-
-  return `${year}-${month}-${day}_${hours}-${minutes}.json`;
+function timeFile() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}.json`;
 }
 
-/**
- * Ensure the results directory exists
- * @returns {string} - Path to the results directory
- */
-function ensureResultsDirectoryExists() {
-  const resultsDir = path.join(__dirname, '../results');
-  if (!fs.existsSync(resultsDir)) {
-    fs.mkdirSync(resultsDir, { recursive: true });
-  }
-  return resultsDir;
+const ensureDir = () => { const dir = path.join(__dirname, '../results'); if (!fs.existsSync(dir)) fs.mkdirSync(dir,{recursive:true}); return dir; };
+const latestFile = () => { const d=ensureDir(); const f=fs.readdirSync(d).filter(e=>e.endsWith('.json')); if(!f.length) return null; f.sort((a,b)=>fs.statSync(path.join(d,b)).mtime-fs.statSync(path.join(d,a)).mtime); return path.join(d,f[0]); };
+const load = f => (!f||!fs.existsSync(f))?[]:JSON.parse(fs.readFileSync(f,'utf8'));
+
+function extractInstagramHandle(url){
+  if(url.endsWith('/')) url=url.slice(0,-1);
+  const m=url.match(/instagram\.com\/([A-Za-z0-9_.-]+)/);
+  return m && !['p','explore','about','legal','reel'].includes(m[1]) ? m[1] : null;
 }
 
-/**
- * Find the most recent results file in the results directory
- * @returns {string|null} - Path to the most recent results file or null if none exists
- */
-function findMostRecentResultsFile() {
-  try {
-    const resultsDir = ensureResultsDirectoryExists();
-    const files = fs.readdirSync(resultsDir).filter(file => file.endsWith('.json'));
+/* ===== OSM QUERY ===== */
+async function queryOverpassAPI(){
+  console.log('Querying OSM…');
+  // ===== AREAS =====
+  const areaParts = SEARCH_AREAS.map((name, i) =>
+      `area["name"="${name}"]["admin_level"~"[2-9]"]->.a${i};`
+  );
+  // Fusionne .a0;.a1; … en .searchArea
+  const joinAreas = `(${SEARCH_AREAS.map((_, i) => `.a${i}`).join(';')};)->.searchArea;`;
+  const areaDefs = areaParts.join('\n  ') + '\n  ' + joinAreas;
 
-    if (files.length === 0) {
-      return null;
+  // ===== SHOP QUERIES =====
+  const websiteTags = ['website', 'contact:website', 'url', 'contact:instagram'];
+  const shopQueries = SHOP_TYPES.flatMap(({ tag }) => {
+    const [k, v] = tag.split('=');
+    return websiteTags.flatMap(tg => [
+      `node["${k}"="${v}"]["${tg}"](area.searchArea);`,
+      `way ["${k}"="${v}"]["${tg}"](area.searchArea);`,
+      `relation["${k}"="${v}"]["${tg}"](area.searchArea);`
+    ]);
+  }).join('\n  ');
+
+  const query = `[out:json];
+${areaDefs}
+(${shopQueries});
+out body;>;out skel qt;`;
+  try{
+    const {data}=await axios.post('https://overpass-api.de/api/interpreter',query,{headers:{'Content-Type':'application/x-www-form-urlencoded'}});
+    if(!data?.elements) return [];
+    const shops=[];
+    for(const e of data.elements){
+      if(!e.tags || isExcludedBrand(e.tags)) continue;
+      let typeLbl;
+      for(const {tag,label} of SHOP_TYPES){const [k,v]=tag.split('='); if(e.tags[k]===v){typeLbl=label;break;}}
+      if(!typeLbl) continue;
+      const website=e.tags.website||e.tags['contact:website']||e.tags.url||null;
+      const igTag=e.tags['contact:instagram']||null;
+      const city=e.tags['addr:city']||'';
+      const postcode=e.tags['addr:postcode']||'';
+      shops.push({website,city,postcode,type:typeLbl,igTag});
     }
-
-    // Sort files by creation date (newest first)
-    files.sort((a, b) => {
-      const aTime = fs.statSync(path.join(resultsDir, a)).mtime.getTime();
-      const bTime = fs.statSync(path.join(resultsDir, b)).mtime.getTime();
-      return bTime - aTime;
-    });
-
-    return path.join(resultsDir, files[0]);
-  } catch (error) {
-    console.error('Error finding most recent results file:', error.message);
-    return null;
-  }
-}
-
-/**
- * Load data from a JSON file
- * @param {string} filePath - Path to the JSON file
- * @returns {Array} - Array of objects from the JSON file or empty array if file doesn't exist
- */
-function loadDataFromFile(filePath) {
-  try {
-    if (!filePath || !fs.existsSync(filePath)) {
-      return [];
-    }
-
-    const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error(`Error loading data from ${filePath}:`, error.message);
-    return [];
-  }
-}
-
-/**
- * Extract Instagram handle from a URL
- * @param {string} url - Instagram URL
- * @returns {string|null} - Instagram handle or null if not found
- */
-function extractInstagramHandle(url) {
-  try {
-    // Remove trailing slash if present
-    if (url.endsWith('/')) {
-      url = url.slice(0, -1);
-    }
-
-    // Extract username from different possible Instagram URL formats
-    const patterns = [
-      /instagram\.com\/([^\/\?]+)/,
-      /instagram\.com\/p\/[^\/]+\/([^\/\?]+)/,
-      /instagram\.com\/explore\/tags\/([^\/\?]+)/
-    ];
-
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match && match[1]) {
-        // Exclude common non-username paths
-        const excludedPaths = ['p', 'explore', 'about', 'legal', 'reel'];
-        if (!excludedPaths.includes(match[1])) {
-          return match[1];
-        }
-      }
-    }
-
-    return null;
-  } catch (error) {
-    console.error(`Error extracting Instagram handle from ${url}:`, error.message);
-    return null;
-  }
-}
-
-// ===== MAIN FUNCTIONS =====
-
-/**
- * Query Overpass API to find shops in the specified area
- * @returns {Promise<Array>} - Array of shops with website, city, and type
- */
-async function queryOverpassAPI() {
-  try {
-    console.log(`Searching for shops in ${SEARCH_AREA}...`);
-
-    // Build the Overpass query for each shop type
-    const shopQueries = SHOP_TYPES.map(({ tag }) => {
-      const [key, value] = tag.split('=');
-      return `node["${key}"="${value}"]["website"]["addr:city"](area.searchArea);
-way["${key}"="${value}"]["website"]["addr:city"](area.searchArea);
-relation["${key}"="${value}"]["website"]["addr:city"](area.searchArea);`;
-    }).join('\n');
-
-    const query = `
-      [out:json];
-      area["name"="${SEARCH_AREA}"]["admin_level"~"[2-8]"]->.searchArea;
-      (
-        ${shopQueries}
-      );
-      out body;
-      >;
-      out skel qt;
-    `;
-
-    const response = await axios.post('https://overpass-api.de/api/interpreter', query, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    });
-
-    if (!response.data || !response.data.elements) {
-      console.error('Invalid response from Overpass API');
-      return [];
-    }
-
-    // Process and filter the results
-    const shops = [];
-
-    for (const element of response.data.elements) {
-      // Skip elements without tags or website
-      if (!element.tags || !element.tags.website) continue;
-
-      // Skip excluded brands (major chains)
-      if (isExcludedBrand(element.tags)) continue;
-
-      // Find the shop type
-      let shopType = null;
-      for (const { tag, label } of SHOP_TYPES) {
-        const [key, value] = tag.split('=');
-        if (element.tags[key] === value) {
-          shopType = label;
-          break;
-        }
-      }
-
-      // Skip if shop type not found or no city
-      if (!shopType || !element.tags['addr:city']) continue;
-
-      // Normalize website URL
-      let website = element.tags.website;
-      if (!website.startsWith('http://') && !website.startsWith('https://')) {
-        website = 'https://' + website;
-      }
-
-      shops.push({
-        website: website,
-        city: element.tags['addr:city'],
-        type: shopType
-      });
-    }
-
-    console.log(`Found ${shops.length} shops with websites.`);
+    console.log(`OSM returned ${shops.length}`);
     return shops;
-  } catch (error) {
-    console.error('Error querying Overpass API:', error.message);
-    return [];
-  }
+  }catch(err){console.error('Overpass fail',err.message);return[];}
 }
 
-/**
- * Scrape a website to find Instagram links
- * @param {Object} shop - Shop object with website, city, and type
- * @returns {Object|null} - Shop object with Instagram handle or null if not found
- */
-async function scrapeWebsiteForInstagram(shop) {
-  try {
-    console.log(`Scraping website: ${shop.website}`);
+/* ===== SCRAPING ===== */
+async function scrapeWebsiteForInstagram({website,city,postcode,type}){
+  try{
+    const {data}=await axios.get(website,{timeout:10_000,headers:{'User-Agent':'Mozilla/5.0'}});
+    const $=cheerio.load(data);
+    // cherche d'abord les liens <a>
+    let handle=null;
+    $('a').each((_,el)=>{const h=$(el).attr('href'); if(h&&h.includes('instagram.com')){handle=extractInstagramHandle(h); if(handle) return false;}});
+    // si toujours rien, regex sur tout le HTML
+    if(!handle){const m=$.html().match(/instagram\.com\/[A-Za-z0-9_.-]+/); if(m) handle=extractInstagramHandle(m[0]);}
+    if(handle) return {Nom:handle,URL_Site:website,Ville:city||postcode,Type_Commerce:type};
+  }catch(e){console.warn(`Scrape ${website} -> ${e.message}`);} return null;
+}
 
-    const response = await axios.get(shop.website, {
-      timeout: 10000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
-
-    const $ = cheerio.load(response.data);
-    let instagramHandle = null;
-
-    // Find all links on the page
-    $('a').each((_, element) => {
-      const href = $(element).attr('href');
-      if (!href) return;
-
-      // Check if the link is an Instagram link
-      if (href.includes('instagram.com')) {
-        const handle = extractInstagramHandle(href);
-        if (handle) {
-          instagramHandle = handle;
-          return false; // Break the loop
-        }
-      }
-    });
-
-    if (instagramHandle) {
-      return {
-        Nom: instagramHandle,
-        URL_Site: shop.website,
-        Ville: shop.city,
-        Type_Commerce: shop.type
-      };
+/* ===== MAIN ===== */
+async function main(){
+  const prev=load(latestFile());
+  const airtable=await fetchAirtableRecords();
+  const seen=new Set(prev.map(s=>`${s.URL_Site}|${s.Type_Commerce}`));
+  const shops=await queryOverpassAPI();
+  const limit=pLimit(CONCURRENCY);
+  const tasks=shops.map(shop=>limit(async()=>{
+    if(seen.has(`${shop.website}|${shop.type}`)||isShopInAirtable({URL_Site:shop.website,Type_Commerce:shop.type},airtable)) return null;
+    if(shop.igTag){ // IG tag présent dans OSM
+      return {Nom:shop.igTag,URL_Site:shop.website,Ville:shop.city||shop.postcode,Type_Commerce:shop.type};
     }
+    const r=await scrapeWebsiteForInstagram(shop);
+    await sleep(SCRAPING_DELAY);
+    return r;
+  }));
 
-    return null;
-  } catch (error) {
-    console.error(`Error scraping ${shop.website}:`, error.message);
-    return null;
-  }
+  const settled=await Promise.allSettled(tasks);
+  const results=settled.filter(s=>s.status==='fulfilled'&&s.value).map(s=>s.value);
+  console.log(`New IG shops: ${results.length}`);
+  if(!results.length) return;
+  const unique=results.filter(r=>!prev.some(p=>p.Nom===r.Nom||(p.URL_Site===r.URL_Site&&p.Type_Commerce===r.Type_Commerce))&&!isShopInAirtable(r,airtable));
+  const file=path.join(ensureDir(),timeFile());
+  fs.writeFileSync(file,JSON.stringify(unique,null,2));
+  console.log(`Saved ${unique.length} -> ${file}`);
 }
 
-/**
- * Check if a shop already exists in previous results
- * @param {Object} shop - Shop object with Instagram handle
- * @param {Array} previousResults - Array of previous shop objects
- * @returns {boolean} - True if shop already exists, false otherwise
- */
-function isShopDuplicate(shop, previousResults) {
-  return previousResults.some(prevShop => 
-    // Check if Instagram handle matches
-    prevShop.Nom === shop.Nom ||
-    // Or if URL and type match (same shop with different Instagram handle)
-    (prevShop.URL_Site === shop.URL_Site && prevShop.Type_Commerce === shop.Type_Commerce)
-  );
-}
-
-/**
- * Check if a shop's website is already in previous results
- * @param {Object} shop - Shop object with website, city, and type
- * @param {Array} previousResults - Array of previous shop objects
- * @returns {boolean} - True if shop's website is already in previous results, false otherwise
- */
-function isWebsiteAlreadyProcessed(shop, previousResults) {
-  return previousResults.some(prevShop => 
-    prevShop.URL_Site === shop.website && prevShop.Type_Commerce === shop.type
-  );
-}
-
-/**
- * Filter out duplicate shops from new results
- * @param {Array} newResults - Array of new shop objects
- * @param {Array} previousResults - Array of previous shop objects
- * @param {Array} airtableRecords - Array of Airtable records
- * @returns {Array} - Array of unique shop objects
- */
-function filterDuplicates(newResults, previousResults, airtableRecords = []) {
-  if (!previousResults.length && !airtableRecords.length) {
-    return newResults;
-  }
-
-  return newResults.filter(shop => 
-    !isShopDuplicate(shop, previousResults) && 
-    !isShopInAirtable(shop, airtableRecords)
-  );
-}
-
-/**
- * Save results to a JSON file, avoiding duplicates from previous results and Airtable
- * @param {Array} newResults - Array of new shop objects with Instagram handles
- * @param {Array} airtableRecords - Array of Airtable records
- */
-function saveResultsToFile(newResults, airtableRecords = []) {
-  try {
-    // Find most recent results file and load previous data
-    const mostRecentFile = findMostRecentResultsFile();
-    const previousResults = loadDataFromFile(mostRecentFile);
-
-    // Filter out duplicates from both previous results and Airtable
-    const uniqueResults = filterDuplicates(newResults, previousResults, airtableRecords);
-
-    // Combine previous and new unique results
-    const combinedResults = [...previousResults, ...uniqueResults];
-
-    // Save combined results to a new file
-    const resultsDir = ensureResultsDirectoryExists();
-    const filename = generateTimestampFilename();
-    const filePath = path.join(resultsDir, filename);
-
-    fs.writeFileSync(filePath, JSON.stringify(combinedResults, null, 2), 'utf8');
-
-    console.log(`Found ${uniqueResults.length} new unique shops (filtered out ${newResults.length - uniqueResults.length} duplicates).`);
-    console.log(`Total of ${combinedResults.length} shops saved to ./results/${filename}`);
-  } catch (error) {
-    console.error('Error saving results to file:', error.message);
-  }
-}
-
-// ===== MAIN EXECUTION =====
-
-async function main() {
-  try {
-    // Load previous results to avoid scraping already processed websites
-    const mostRecentFile = findMostRecentResultsFile();
-    const previousResults = loadDataFromFile(mostRecentFile);
-    console.log(`Loaded ${previousResults.length} shops from previous results.`);
-
-    // Fetch records from Airtable to check for duplicates
-    const airtableRecords = await fetchAirtableRecords();
-    console.log(`Loaded ${airtableRecords.length} shops from Airtable.`);
-
-    // Step 1: Query Overpass API
-    const shops = await queryOverpassAPI();
-
-    if (shops.length === 0) {
-      console.log('No shops found. Exiting.');
-      return;
-    }
-
-    // Step 2: Scrape websites for Instagram links
-    const results = [];
-    let skippedCount = 0;
-
-    for (const shop of shops) {
-      // Check if this website is already in previous results
-      if (isWebsiteAlreadyProcessed(shop, previousResults)) {
-        // Find all previous results for this website
-        const existingResults = previousResults.filter(prevShop => 
-          prevShop.URL_Site === shop.website && prevShop.Type_Commerce === shop.type
-        );
-
-        // Add existing results to new results
-        if (existingResults.length > 0) {
-          results.push(...existingResults);
-          console.log(`Skipping scraping for ${shop.website} (already processed in previous JSON results)`);
-          skippedCount++;
-          continue; // Skip to next shop
-        }
-      }
-
-      // Check if this shop already exists in Airtable
-      // First, create a temporary shop object with the format expected by isShopInAirtable
-      const tempShop = {
-        URL_Site: shop.website,
-        Type_Commerce: shop.type
-      };
-
-      if (isShopInAirtable(tempShop, airtableRecords)) {
-        console.log(`Skipping scraping for ${shop.website} (already exists in Airtable)`);
-        skippedCount++;
-        continue; // Skip to next shop
-      }
-
-      // If not already processed, scrape the website
-      const result = await scrapeWebsiteForInstagram(shop);
-
-      if (result) {
-        results.push(result);
-        console.log(`Found Instagram: ${result.Nom} for ${shop.website}`);
-      }
-
-      // Add delay between requests
-      await sleep(SCRAPING_DELAY);
-    }
-
-    console.log(`Skipped scraping ${skippedCount} websites (already processed in previous runs).`);
-    console.log(`Found ${results.length} shops with Instagram presence.`);
-
-    // Step 3: Save results to file
-    if (results.length > 0) {
-      saveResultsToFile(results, airtableRecords);
-    } else {
-      console.log('No shops with Instagram presence found. No file created.');
-    }
-
-  } catch (error) {
-    console.error('Error in main execution:', error.message);
-  }
-}
-
-// Run the script
 main();

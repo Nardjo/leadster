@@ -37,7 +37,7 @@ const EXCLUDED_BRANDS = [
   "Burton of London",
   "Devred 1902",
   "devred",
-  "eram,"
+  "eram",
   "Springfield",
   "Cache Cache",
   "Bonobo",
