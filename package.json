@@ -2,23 +2,21 @@
   "name": "leadster",
   "version": "1.0.0",
   "description": "Script to find shops in France with Instagram presence",
-  "main": "scripts/search.js",
+  "main": "scripts/find.js",
   "scripts": {
-    "search-lead": "node ./scripts/search.js",
-    "airtable": "node ./scripts/airtable.js",
+    "find-leads": "node ./scripts/find.js",
+    "extract-emails": "node ./scripts/extract_emails.js",
+    "notion": "node ./scripts/notion.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "airtable": "^0.12.2",
-    "axios": "^1.6.2",
-    "axios-retry": "^4.5.0",
-    "cheerio": "^1.0.0-rc.12",
-    "dotenv": "^16.3.1",
-    "p-limit": "^6.2.0"
-  },
-  "devDependencies": {
-    "vitest": "^1.0.0"
+    "@notionhq/client": "^2.3.0",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.5.0",
+    "email-existence": "^0.1.6",
+    "p-limit": "^6.2.0",
+    "papaparse": "^5.5.2"
   },
   "type": "module"
 }
