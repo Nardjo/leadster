@@ -4,10 +4,9 @@
   "description": "Script to find shops in France with Instagram presence",
   "main": "scripts/search.js",
   "scripts": {
-    "search-lead": "node ./scripts/search.js",
+    "search-leads": "node ./scripts/search.js",
     "airtable": "node ./scripts/airtable.js",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "biome" : "pnpm biome check --write ."
   },
   "dependencies": {
     "airtable": "^0.12.2",
@@ -18,6 +17,7 @@
     "p-limit": "^6.2.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "vitest": "^1.0.0"
   },
   "type": "module"

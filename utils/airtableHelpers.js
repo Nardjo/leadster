@@ -58,7 +58,7 @@ export async function uploadToAirtable(data) {
         'Ville': shop.Ville,
         'Type de Commerce': shop.Type_Commerce,
         'Dernier contact': null,
-        'Statut': 'Non contacter',
+        'Statut': 'Non contacté',
       }
     }));
 

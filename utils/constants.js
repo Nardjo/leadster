@@ -1,5 +1,5 @@
 /* ===== CONSTANTES ===== */
-const SEARCH_AREAS     = ['Lyon', 'Métropole de Lyon']; // plusieurs relations
+const SEARCH_AREAS     = ['Nice', 'Métropole de Nice']; // plusieurs relations
 const SCRAPING_DELAY   = 1_000;
 const CONCURRENCY      = 5;
 const RETRY_COUNT      = 3;
@@ -12,7 +12,6 @@ const SHOP_TYPES = [
   { tag: 'shop=jewelry',      label: 'Bijoux'             },
   { tag: 'shop=car_parts',    label: 'Équipement Auto'    },
   { tag: 'shop=electronics',  label: 'Électronique / LED' },
-  { tag: 'shop=doityourself', label: 'Bricolage'          },
   { tag: 'shop=furniture',    label: 'Meubles'            }
 ];
 
