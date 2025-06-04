@@ -192,6 +192,70 @@ function normalizeUrl(url) {
 }
 
 /**
+ * Fetch records from Airtable by status
+ * @param {string} statusFieldName - Name of the status field in Airtable
+ * @param {string} statusValue - Value of the status to filter by
+ * @returns {Promise<Array>} - Array of Airtable records with the specified status
+ */
+export async function fetchRecordsByStatus(statusFieldName, statusValue) {
+  try {
+    // Configure Airtable
+    const config = {
+      apiKey: AIRTABLE_API_KEY
+    };
+
+    // Add optional configuration parameters if they exist
+    if (AIRTABLE_ENDPOINT_URL) {
+      config.endpointUrl = AIRTABLE_ENDPOINT_URL;
+    }
+
+    if (AIRTABLE_REQUEST_TIMEOUT) {
+      config.requestTimeout = AIRTABLE_REQUEST_TIMEOUT;
+    }
+
+    Airtable.configure(config);
+
+    const base = Airtable.base(AIRTABLE_BASE_ID);
+    const table = base(AIRTABLE_TABLE_NAME);
+
+    console.log(`Fetching records with ${statusFieldName} = "${statusValue}" from Airtable...`);
+
+    // Fetch records with the specified status
+    const filterFormula = `{${statusFieldName}} = "${statusValue}"`;
+    const records = await table.select({
+      filterByFormula: filterFormula
+    }).all();
+
+    console.log(`Fetched ${records.length} records with ${statusFieldName} = "${statusValue}" from Airtable.`);
+
+    // Convert to a simpler format
+    return records.map(record => ({
+      id: record.id,
+      Nom: record.get('Nom'),
+      URL_Site: record.get('Site web'),
+      Ville: record.get('Ville'),
+      Type_Commerce: record.get('Type de Commerce'),
+      Statut: record.get('Statut')
+    }));
+  } catch (error) {
+    console.error(`Error fetching records with ${statusFieldName} = "${statusValue}" from Airtable:`, error.message);
+
+    // Handle different types of errors
+    if (error.statusCode === 401 || error.error === 'AUTHENTICATION_REQUIRED') {
+      console.error('Authentication error: Please check your Airtable API key');
+    } else if (error.statusCode === 404 || error.error === 'NOT_FOUND') {
+      console.error('Not found error: Please check your Airtable Base ID and Table name');
+    } else if (error.statusCode === 429 || error.error === 'TOO_MANY_REQUESTS') {
+      console.error('Rate limit exceeded: Try again later or reduce the frequency of requests');
+    } else if (error.statusCode >= 500) {
+      console.error('Airtable server error: Please try again later');
+    }
+
+    return [];
+  }
+}
+
+/**
  * Check if a shop already exists in Airtable
  * @param {Object} shop - Shop object with Instagram handle, URL, and type
  * @param {Array} airtableRecords - Array of Airtable records

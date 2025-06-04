@@ -6,6 +6,8 @@
   "scripts": {
     "search-leads": "node ./scripts/search.js",
     "airtable": "node ./scripts/airtable.js",
+    "manage-archived": "node ./scripts/manageArchived.js",
+    "find-archived": "node ./scripts/findArchived.js",
     "biome" : "pnpm biome check --write ."
   },
   "dependencies": {
