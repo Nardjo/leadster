@@ -59,6 +59,11 @@ export async function uploadToAirtable(data) {
         'Type de Commerce': shop.Type_Commerce,
         'Dernier contact': null,
         'Statut': 'Non contacté',
+        ...(shop.tag
+          ? (shop.tag.startsWith('shop=')
+              ? { 'Notes': shop.tag.split('=')[1] || '' }
+              : { 'Notes': 'Pas un ecommerce' })
+          : {})
       }
     }));
 

@@ -2,19 +2,19 @@
  * Leadster - Script to find shops in France with Instagram presence
  */
 
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import axios from 'axios'
+import * as cheerio from 'cheerio'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 // biome-ignore lint/style/useNodejsImportProtocol: <explanation>
-import { dirname } from 'path';
-import { fetchAirtableRecords, isShopInAirtable } from '../utils/airtableHelpers.js';
-import * as dotenv from 'dotenv';
-import EXCLUDED_BRANDS from '../utils/brandsExcluded.js';
-import pLimit from 'p-limit';
-import axiosRetry from 'axios-retry';
-import { SEARCH_AREAS, SCRAPING_DELAY, CONCURRENCY, RETRY_COUNT, RETRY_DELAY_MS, SHOP_TYPES } from '../utils/constants.js';
+import axiosRetry from 'axios-retry'
+import * as dotenv from 'dotenv'
+import pLimit from 'p-limit'
+import { dirname } from 'path'
+import { fetchAirtableRecords, isShopInAirtable } from '../utils/airtableHelpers.js'
+import EXCLUDED_BRANDS from '../utils/brandsExcluded.js'
+import { CONCURRENCY, RETRY_COUNT, RETRY_DELAY_MS, SCRAPING_DELAY, SEARCH_AREAS, SHOP_TYPES } from '../utils/constants.js'
 
 dotenv.config();
 
@@ -50,12 +50,33 @@ function timeFile() {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}.json`;
 }
 
-const ensureDir = () => { const dir = path.join(__dirname, '../results'); if (!fs.existsSync(dir)) fs.mkdirSync(dir,{recursive:true}); return dir; };
-const latestFile = () => { const d=ensureDir(); const f=fs.readdirSync(d).filter(e=>e.endsWith('.json')); if(!f.length) return null; f.sort((a,b)=>fs.statSync(path.join(d,b)).mtime-fs.statSync(path.join(d,a)).mtime); return path.join(d,f[0]); };
-const load = f => (!f||!fs.existsSync(f))?[]:JSON.parse(fs.readFileSync(f,'utf8'));
+const ensureDir = () => {
+  const dir = path.join(__dirname, '../results');
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  return dir;
+};
+
+const latestFile = () => {
+  const dir = ensureDir();
+  const files = fs.readdirSync(dir).filter(e => e.endsWith('.json'));
+  if (!files.length) return null;
+  files.sort((a, b) => {
+    const mtimeA = fs.statSync(path.join(dir, a)).mtime.getTime();
+    const mtimeB = fs.statSync(path.join(dir, b)).mtime.getTime();
+    return mtimeB - mtimeA;
+  });
+  return path.join(dir, files[0]);
+};
+
+const load = f => {
+  if (!f || !fs.existsSync(f)) return [];
+  return JSON.parse(fs.readFileSync(f, 'utf8'));
+};
 
 /**
- * Load archived items from the archived_items.json file
+ * Charger les éléments archivés depuis le fichier archived_items.json
  * @returns {Array} - Array of archived items or empty array if file doesn't exist
  */
 function loadArchivedItems() {
@@ -152,8 +173,10 @@ async function main(){
   const archivedItems = loadArchivedItems();
   const seen=new Set(prev.map(s=>`${s.URL_Site}|${s.Type_Commerce}`));
   const shops=await queryOverpassAPI();
+  // Filtrer pour ne garder que ceux qui ont un site web
+  const shopsWithWebsite = shops.filter(shop => !!shop.website);
   const limit=pLimit(CONCURRENCY);
-  const tasks=shops.map(shop=>limit(async()=>{
+  const tasks=shopsWithWebsite.map(shop=>limit(async()=>{
     if(seen.has(`${shop.website}|${shop.type}`)||isShopInAirtable({URL_Site:shop.website,Type_Commerce:shop.type},airtable)) return null;
     if(shop.igTag){ // IG tag présent dans OSM
       return {Nom:shop.igTag,URL_Site:shop.website,Ville:shop.city||shop.postcode,Type_Commerce:shop.type};
@@ -164,7 +187,10 @@ async function main(){
   }));
 
   const settled=await Promise.allSettled(tasks);
-  const results=settled.filter(s=>s.status==='fulfilled'&&s.value).map(s=>s.value);
+  const results=settled
+    .filter(s=>s.status==='fulfilled' && s.value)
+    .map(s=>(s.status==='fulfilled'?s.value:null))
+    .filter(r => !!r);
   console.log(`New IG shops: ${results.length}`);
   if(!results.length) return;
   const unique=results.filter(r=>
