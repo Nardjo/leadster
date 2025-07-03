@@ -6,12 +6,12 @@
  * It uses the Airtable helper functions from utils/airtableHelpers.js.
  */
 
-import * as dotenv from 'dotenv';
-import fs from 'fs';
-import path, { dirname } from 'path';
-import readline from 'readline';
-import { fileURLToPath } from 'url';
-import { uploadToAirtable } from '../utils/airtableHelpers.js';
+import * as dotenv from 'dotenv'
+import fs from 'node:fs'
+import path, { dirname } from 'node:path'
+import readline from 'node:readline'
+import { fileURLToPath } from 'node:url'
+import { uploadToAirtable } from '../utils/airtableHelpers.js'
 
 // Load environment variables from .env file
 dotenv.config();

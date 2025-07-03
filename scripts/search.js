@@ -3,15 +3,13 @@
  */
 
 import axios from 'axios'
-import * as cheerio from 'cheerio'
-import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-// biome-ignore lint/style/useNodejsImportProtocol: <explanation>
 import axiosRetry from 'axios-retry'
+import * as cheerio from 'cheerio'
 import * as dotenv from 'dotenv'
+import fs from 'node:fs'
+import path, { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import pLimit from 'p-limit'
-import { dirname } from 'path'
 import { fetchAirtableRecords, isShopInAirtable } from '../utils/airtableHelpers.js'
 import EXCLUDED_BRANDS from '../utils/brandsExcluded.js'
 import { CONCURRENCY, RETRY_COUNT, RETRY_DELAY_MS, SCRAPING_DELAY, SEARCH_AREAS, SHOP_TYPES } from '../utils/constants.js'
@@ -75,30 +73,6 @@ const load = f => {
   return JSON.parse(fs.readFileSync(f, 'utf8'));
 };
 
-/**
- * Charger les éléments archivés depuis le fichier archived_items.json
- * @returns {Array} - Array of archived items or empty array if file doesn't exist
- */
-function loadArchivedItems() {
-  try {
-    if (fs.existsSync(ARCHIVED_ITEMS_FILE)) {
-      const fileContent = fs.readFileSync(ARCHIVED_ITEMS_FILE, 'utf8');
-      if (!fileContent || fileContent.trim() === '') {
-        console.log('Archived items file is empty.');
-        return [];
-      }
-      const archivedItems = JSON.parse(fileContent);
-      console.log(`Loaded ${archivedItems.length} archived items from ${ARCHIVED_ITEMS_FILE}`);
-      return archivedItems;
-    } else {
-      console.log('No archived items file found.');
-      return [];
-    }
-  } catch (error) {
-    console.error(`Error loading archived items: ${error.message}`);
-    return [];
-  }
-}
 
 function extractInstagramHandle(url){
   if(url.endsWith('/')) url=url.slice(0,-1);
@@ -159,7 +133,7 @@ async function scrapeWebsiteForInstagram({website,city,postcode,type}){
     const $=cheerio.load(data);
     // cherche d'abord les liens <a>
     let handle=null;
-    $('a').each((_,el)=>{const h=$(el).attr('href'); if(h&&h.includes('instagram.com')){handle=extractInstagramHandle(h); if(handle) return false;}});
+    $('a').each((_,el)=>{const h=$(el).attr('href'); if(h?.includes('instagram.com')){handle=extractInstagramHandle(h); if(handle) return false;}});
     // si toujours rien, regex sur tout le HTML
     if(!handle){const m=$.html().match(/instagram\.com\/[A-Za-z0-9_.-]+/); if(m) handle=extractInstagramHandle(m[0]);}
     if(handle) return {Nom:handle,URL_Site:website,Ville:city||postcode,Type_Commerce:type};
@@ -170,7 +144,6 @@ async function scrapeWebsiteForInstagram({website,city,postcode,type}){
 async function main(){
   const prev=load(latestFile());
   const airtable=await fetchAirtableRecords();
-  const archivedItems = loadArchivedItems();
   const seen=new Set(prev.map(s=>`${s.URL_Site}|${s.Type_Commerce}`));
   const shops=await queryOverpassAPI();
   // Filtrer pour ne garder que ceux qui ont un site web
@@ -197,9 +170,7 @@ async function main(){
     // Not in previous results
     !prev.some(p=>p.Nom===r.Nom||(p.URL_Site===r.URL_Site&&p.Type_Commerce===r.Type_Commerce)) && 
     // Not in Airtable
-    !isShopInAirtable(r,airtable) && 
-    // Not in archived items
-    !archivedItems.some(a=>a.Nom===r.Nom||(a.URL_Site===r.URL_Site&&a.Type_Commerce===r.Type_Commerce))
+    !isShopInAirtable(r,airtable)
   );
   const file=path.join(ensureDir(),timeFile());
   fs.writeFileSync(file,JSON.stringify(unique,null,2));

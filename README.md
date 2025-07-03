@@ -1,96 +1,130 @@
-# Leadster - Shop Instagram Finder
+# Leadster
 
-Ce script permet d'identifier des boutiques spécifiques en France via OpenStreetMap (OSM), de récupérer leur site web, puis de visiter ce site pour trouver leur compte Instagram, afin de collecter des informations pour de la prospection commerciale.
+Leadster est un outil Node.js pour identifier des business disposant d'une présence en ligne (Instagram, site web), à partir de données OpenStreetMap. Il permet de filtrer, d'exclure les grandes chaînes, de scraper les sites web pour trouver les comptes Instagram, et d'exporter les résultats dans Airtable.
 
-## Fonctionnalités
+## Fonctionnalités principales
 
-1. **Interrogation de l'API Overpass d'OSM** :
-   - Recherche de commerces dans une zone géographique spécifiée (par défaut : "Paris")
-   - Types de commerces ciblés : vêtements, maroquinerie, chaussures, bijoux, épicerie fine, librairie
-   - Filtre pour ne retenir que les commerces avec un site web et une ville
-
-2. **Scraping des sites web** :
-   - Vérification préalable des résultats précédents pour éviter de scraper à nouveau les sites déjà traités
-   - Visite de chaque nouveau site web trouvé
-   - Recherche de liens vers Instagram
-   - Extraction du nom d'utilisateur Instagram
-
-3. **Sauvegarde des résultats** :
-   - Génération d'un fichier JSON avec horodatage
-   - Sauvegarde uniquement des commerces avec présence Instagram
-   - Format structuré avec nom d'utilisateur, URL du site, ville et type de commerce
-   - Détection et prévention des doublons entre les exécutions successives
-   - Combinaison des résultats précédents avec les nouveaux résultats uniques
+- **Recherche OSM** : Interroge l'API Overpass pour récupérer les commerces d'une zone géographique (par défaut : Montpellier et sa métropole).
+- **Filtrage intelligent** : Exclusion automatique des grandes marques et franchises (voir `utils/brandsExcluded.js`).
+- **Scraping web** : Visite chaque site pour détecter la présence d'un compte Instagram.
+- **Détection de doublons** : Combine les nouveaux résultats avec les précédents, évite les doublons et tient compte des shops déjà présents dans Airtable.
+- **Export Airtable** : Upload automatisé des résultats dans une base Airtable pour la prospection.
 
 ## Prérequis
 
-- Node.js (version 14 ou supérieure)
+- Node.js >= 14
 - pnpm
-- Un compte Airtable (pour le script d'upload)
+- Un compte Airtable (pour l'export)
 
 ## Installation
 
-1. Clonez ce dépôt :
+```bash
+git clone [URL_DU_REPO]
+cd leadster
+pnpm install
+```
+
+## Configuration
+
+1. Copiez le fichier d'exemple d'environnement :
+
    ```bash
-   git clone [URL_DU_REPO]
-   cd leadster
+   cp .env.example .env
    ```
 
-2. Installez les dépendances avec pnpm :
-   ```bash
-   pnpm install
-   ```
+2. Modifiez `.env` avec vos identifiants Airtable :
+   - `AIRTABLE_API_KEY` : Clé API Airtable
+   - `AIRTABLE_BASE_ID` : ID de la base Airtable
+   - `AIRTABLE_TABLE_NAME` : Nom de la table (par défaut : Shops)
 
 ## Utilisation
 
-### Script principal de recherche
+### 1. Recherche et scraping des shops
 
-Exécutez le script principal avec l'une des commandes suivantes :
+Lancez la détection et le scraping :
 
 ```bash
 pnpm start
 ```
 
-ou
+- Les résultats sont sauvegardés dans `results/` au format `YYYY-MM-DD_HH-mm.json`.
+- Les doublons par rapport aux anciens résultats et à Airtable sont automatiquement filtrés.
+
+### 2. Upload vers Airtable
+
+Pour exporter les résultats vers Airtable :
 
 ```bash
-pnpm search-shops
+pnpm airtable
 ```
 
-Les résultats seront sauvegardés dans le dossier `./results` avec un nom de fichier au format `YYYY-MM-DD_HH-mm.json`.
+Le script prend automatiquement le fichier de résultats le plus récent.
 
-### Script d'upload vers Airtable
+### 3. Tests unitaires
 
-Un script complémentaire permet d'envoyer les données collectées vers Airtable :
+Lancez les tests (Vitest) :
 
 ```bash
-pnpm airtable-upload
+pnpm test
 ```
 
-Ce script vous propose deux options :
-1. Uploader le fichier de résultats le plus récent
-2. Choisir un fichier spécifique parmi les fichiers disponibles
+## Structure du projet
 
-#### Configuration Airtable
+- `scripts/search.js` : Script principal de détection, scraping et sauvegarde.
+- `scripts/airtable.js` : Script d'upload vers Airtable.
+- `utils/airtableHelpers.js` : Fonctions d'intégration Airtable (upload, fetch, détection de doublons).
+- `utils/brandsExcluded.js` : Liste des marques à exclure.
+- `utils/constants.js` : Paramètres globaux (zones de recherche, types de commerces, etc).
+- `results/` : Fichiers JSON générés.
+
+## Modèle de données Airtable
+
+Votre table doit contenir les colonnes suivantes :
+
+- `Nom` (handle Instagram)
+- `Site web`
+- `Ville`
+- `Type de Commerce`
+- `Dernier contact` (date, initialement vide)
+- `Statut` ("Non contacté" à l'import)
+
+## Personnalisation
+
+- Pour modifier la zone géographique, éditez `SEARCH_AREAS` dans `utils/constants.js`.
+- Pour changer les types de commerces ciblés, modifiez `SHOP_TYPES` dans le même fichier.
+- Pour ajuster le délai entre les requêtes ou la concurrence, modifiez `SCRAPING_DELAY`, `CONCURRENCY`, etc.
+
+## Dépendances principales
+
+- `axios`, `axios-retry` : Requêtes HTTP et gestion des erreurs réseau
+- `cheerio` : Scraping HTML
+- `dotenv` : Gestion de la configuration
+- `airtable` : API Airtable
+- `p-limit` : Contrôle de la concurrence
+
+### Configuration Airtable
 
 Avant d'utiliser le script d'upload, vous devez configurer vos identifiants Airtable :
 
 1. Créez une base Airtable avec une table contenant les colonnes suivantes :
-   - `Nom Instagram`
+   - `Nom`
    - `URL Site`
    - `Ville`
+   - `Instagram`
+   - `Instagram` (colonne de type Button, avec une formule pour générer le lien Instagram : `"https://www.instagram.com/" & ENCODE_URL_COMPONENT(Nom)`)
    - `Type de Commerce`
    - `Date d'ajout`
    - `Dernier contact` (sera défini comme null lors de l'upload initial, ce champ doit être configuré comme un champ de type Date dans Airtable)
    - `Statut` (sera défini comme "Non contacter" lors de l'upload initial)
 
 2. Copiez le fichier `.env.example` en `.env` et configurez vos identifiants Airtable :
+
    ```bash
    cp .env.example .env
    ```
 
 3. Modifiez le fichier `.env` avec vos informations :
-   - `AIRTABLE_API_KEY` : Votre clé API Airtable (créez un token sur https://airtable.com/create/tokens)
+   - `AIRTABLE_API_KEY` : Votre clé API Airtable (créez un token sur <https://airtable.com/create/tokens>)
    - `AIRTABLE_BASE_ID` : L'ID de votre base Airtable (trouvé dans l'URL de votre base)
    - `AIRTABLE_TABLE_NAME` : Le nom de votre table (par défaut : "Shops")
 
@@ -114,7 +148,7 @@ Vous pouvez modifier les paramètres suivants dans le fichier `search.js` :
 
 - **Configuration** : Paramètres facilement modifiables
 - **Fonctions auxiliaires** : Fonctions utilitaires (génération de nom de fichier, extraction de handle Instagram, etc.)
-- **Fonctions principales** : 
+- **Fonctions principales** :
   - `queryOverpassAPI()` : Interrogation de l'API Overpass
   - `scrapeWebsiteForInstagram()` : Scraping des sites web
   - `findMostRecentResultsFile()` : Recherche du fichier de résultats le plus récent
@@ -127,7 +161,7 @@ Vous pouvez modifier les paramètres suivants dans le fichier `search.js` :
 ### Script d'upload Airtable (airtable.js)
 
 - **Configuration** : Paramètres pour l'API Airtable (clé API, ID de base, nom de table)
-- **Fonctions auxiliaires** : 
+- **Fonctions auxiliaires** :
   - `ensureResultsDirectoryExists()` : Vérification/création du dossier de résultats
   - `findMostRecentResultsFile()` : Recherche du fichier de résultats le plus récent
   - `loadDataFromFile()` : Chargement des données d'un fichier JSON
@@ -142,6 +176,7 @@ Vous pouvez modifier les paramètres suivants dans le fichier `search.js` :
 ### Script principal
 
 Le script principal inclut une gestion des erreurs pour :
+
 - Les requêtes à l'API Overpass
 - Le scraping des sites web
 - La sauvegarde des résultats
@@ -149,6 +184,7 @@ Le script principal inclut une gestion des erreurs pour :
 ### Script d'upload Airtable
 
 Le script d'upload Airtable inclut une gestion des erreurs pour :
+
 - Le chargement des fichiers de résultats
 - La validation des entrées utilisateur
 - Les requêtes à l'API Airtable
@@ -188,7 +224,3 @@ Les tests couvrent les fonctions critiques du projet, notamment :
 - Chargement et analyse des données JSON
 
 Pour plus d'informations sur les tests, consultez le fichier `tests/README.md`.
-
-## Licence
-
-Ce projet est sous licence MIT.
