@@ -107,7 +107,3 @@ Des tests unitaires sont présents avec [Vitest](https://vitest.dev/). Pour les 
 ```bash
 pnpm test
 ```
-
-## Licence
-
-Ce projet est sous licence MIT.
