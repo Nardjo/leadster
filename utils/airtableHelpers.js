@@ -200,7 +200,7 @@ export async function fetchAirtableRecords() {
  * @param {string} url - URL to normalize
  * @returns {string} - Normalized URL
  */
-function normalizeUrl(url) {
+export function normalizeUrl(url) {
 	if (!url) return "";
 
 	// Convert to lowercase

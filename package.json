@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node ./scripts/search.js",
     "airtable": "node ./scripts/airtable.js",
-    "biome": "pnpm biome check --write ."
+    "biome": "pnpm biome check --write .",
+    "test": "vitest --dir=tests"
   },
   "dependencies": {
     "airtable": "^0.12.2",
