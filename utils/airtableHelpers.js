@@ -5,8 +5,8 @@
  * It provides functions to fetch records, check for duplicates, and upload data.
  */
 
-import Airtable from "airtable"
-import * as dotenv from "dotenv"
+import Airtable from "airtable";
+import * as dotenv from "dotenv";
 
 // Load environment variables from .env file
 dotenv.config();
