@@ -29,3 +29,4 @@ pnpm-debug.log*
 
 # Fichier de configuration locale (non versionné)
 utils/constants.js
+results/*

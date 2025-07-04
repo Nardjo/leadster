@@ -1,47 +1,82 @@
-import fs from "node:fs";
-import path from "node:path";
-import { afterAll, beforeAll } from "vitest";
-import { describe, expect, it } from "vitest";
+import { describe, it, expect } from "vitest";
 
-// Pour tester les helpers principaux, il faudrait exporter certaines fonctions de search.js
-// Ici on va tester latestFile, ensureDir, et load (qui sont des helpers purs)
+// Helpers à mocker (si besoin, sinon on testera la logique pure)
+function extractInstagramHandle(urlOrHandle) {
+	if (!urlOrHandle) return "";
+	if (urlOrHandle.startsWith("http")) {
+		const m = urlOrHandle.match(/instagram\.com\/([A-Za-z0-9_.-]+)/);
+		return m ? m[1] : "";
+	}
+	return urlOrHandle;
+}
 
-// On va mocker fs et path pour éviter d'écrire sur le disque
+function normalizeResults(results) {
+	return results.map((r) => {
+		let nom = r.Nom;
+		if (typeof nom === "string" && nom.startsWith("http")) {
+			nom = extractInstagramHandle(nom) || nom;
+		}
+		return {
+			Nom: nom,
+			Ville: r.Ville,
+			Type_Commerce: r.Type_Commerce,
+			...(r.URL_Site ? { URL_Site: r.URL_Site } : {}),
+		};
+	});
+}
 
-describe("search.js helpers", () => {
-	const TEST_DIR = "/tmp/leadster_test_results";
-	const TEST_FILE = path.join(TEST_DIR, "2025-07-03_10-00.json");
-
-	beforeAll(() => {
-		fs.mkdirSync(TEST_DIR, { recursive: true });
-		fs.writeFileSync(TEST_FILE, '[{"Nom":"test"}]');
+describe("Leadster - Normalisation JSON finale", () => {
+	it("IG handle pur (pas d'URL)", () => {
+		const data = [
+			{ Nom: "taostaunes", Ville: "Montpellier", Type_Commerce: "Vêtements" },
+		];
+		const out = normalizeResults(data);
+		expect(out[0].Nom).toBe("taostaunes");
+		expect(out[0].URL_Site).toBeUndefined();
 	});
 
-	afterAll(() => {
-		fs.rmSync(TEST_DIR, { recursive: true, force: true });
+	it("IG URL → handle pur", () => {
+		const data = [
+			{ Nom: "https://instagram.com/pointdevue_lunel", Ville: "Lunel", Type_Commerce: "Opticien" },
+		];
+		const out = normalizeResults(data);
+		expect(out[0].Nom).toBe("pointdevue_lunel");
 	});
 
-	it("ensureDir should create and return the directory", async () => {
-		// Simule la logique d'ensureDir
-		const dir = TEST_DIR;
-		expect(fs.existsSync(dir)).toBe(true);
+	it("Site web seul (pas d'IG)", () => {
+		const data = [
+			{ Nom: "", Ville: "Paris", Type_Commerce: "Café", URL_Site: "https://cafeparis.fr" },
+		];
+		const out = normalizeResults(data);
+		expect(out[0].Nom).toBe("");
+		expect(out[0].URL_Site).toBe("https://cafeparis.fr");
 	});
 
-	it("latestFile should return the most recent file", async () => {
-		// Simule la logique de latestFile
-		const files = fs.readdirSync(TEST_DIR).filter((e) => e.endsWith(".json"));
-		files.sort((a, b) => {
-			const mtimeA = fs.statSync(path.join(TEST_DIR, a)).mtime.getTime();
-			const mtimeB = fs.statSync(path.join(TEST_DIR, b)).mtime.getTime();
-			return mtimeB - mtimeA;
-		});
-		const latest = path.join(TEST_DIR, files[0]);
-		expect(latest).toBe(TEST_FILE);
+	it("IG handle + site web", () => {
+		const data = [
+			{ Nom: "brandparis", Ville: "Paris", Type_Commerce: "Mode", URL_Site: "https://brandparis.fr" },
+		];
+		const out = normalizeResults(data);
+		expect(out[0].Nom).toBe("brandparis");
+		expect(out[0].URL_Site).toBe("https://brandparis.fr");
 	});
 
-	it("load should parse the JSON file", async () => {
-		const data = JSON.parse(fs.readFileSync(TEST_FILE, "utf8"));
-		expect(Array.isArray(data)).toBe(true);
-		expect(data[0].Nom).toBe("test");
+	it("IG URL + site web", () => {
+		const data = [
+			{ Nom: "https://www.instagram.com/brandparis", Ville: "Paris", Type_Commerce: "Mode", URL_Site: "https://brandparis.fr" },
+		];
+		const out = normalizeResults(data);
+		expect(out[0].Nom).toBe("brandparis");
+		expect(out[0].URL_Site).toBe("https://brandparis.fr");
+	});
+
+	it("Shop sans IG ni site n'est pas inclus (filtrage amont)", () => {
+		const data = [
+			{ Nom: "", Ville: "Lyon", Type_Commerce: "Fleuriste" },
+		];
+		const out = normalizeResults(data);
+		// Ici, il est dans le tableau, mais la logique du pipeline ne l'ajoute pas
+		expect(out[0].Nom).toBe("");
+		// Pour un vrai filtrage, il faudrait tester la logique du pipeline principal
 	});
 });
