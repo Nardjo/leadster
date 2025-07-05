@@ -6,12 +6,12 @@
  * It uses the Airtable helper functions from utils/airtableHelpers.js.
  */
 
+import * as dotenv from "dotenv";
 import fs from "node:fs";
 import path, { dirname } from "node:path";
 import readline from "node:readline";
 import { fileURLToPath } from "node:url";
-import * as dotenv from "dotenv";
-import { uploadToAirtable } from "../utils/airtableHelpers.js";
+import { insertLeads } from "../utils/postgresHelpers.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -135,16 +135,8 @@ async function main() {
 	try {
 		// const rl = createReadlineInterface();
 
-		console.log("Leadster - Airtable Upload Script");
+		console.log("Leadster - Export vers Neon/Postgres");
 		console.log("--------------------------------");
-
-		// Check if Airtable API key and base ID are set
-		if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
-			console.error(
-				"Error: Please set your Airtable API key and base ID in the .env file.",
-			);
-			return;
-		}
 
 		// Utiliser toujours le fichier le plus récent
 		const filePath = findMostRecentResultsFile();
@@ -168,8 +160,18 @@ async function main() {
 
 		console.log(`Loaded ${data.length} shops from ${path.basename(filePath)}.`);
 
-		// Upload to Airtable sans confirmation
-		await uploadToAirtable(data);
+		// Adapter les champs au snake_case pour la table Leads
+		const mapped = data.map((shop) => ({
+			nom: shop.Nom,
+			site_web: shop.URL_Site,
+			ville: shop.Ville,
+			type_de_commerce: shop.Type_Commerce,
+			statut: "Non contacté",
+			dernier_contact: null,
+			email: shop.Email || null,
+			notes: null,
+		}));
+		await insertLeads(mapped);
 	} catch (error) {
 		console.error("An error occurred:", error.message);
 	}

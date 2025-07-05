@@ -1,6 +1,6 @@
 # Leadster - Shop Instagram Finder
 
-Ce projet permet d'identifier des boutiques et sites à potentiel en France via OpenStreetMap (OSM), de récupérer leur site web, puis de visiter ce site pour trouver leur compte Instagram, afin de collecter des informations pour de la prospection commerciale. Les résultats sont ensuite envoyés dans une base Airtable.
+Ce projet permet d'identifier des boutiques et sites à potentiel en France via OpenStreetMap (OSM), de récupérer leur site web, puis de trouver leur compte Instagram pour enrichir une base de prospection commerciale. Les résultats sont désormais exportés dans une base de données Postgres.
 
 ## Fonctionnalités
 
@@ -14,17 +14,17 @@ Ce projet permet d'identifier des boutiques et sites à potentiel en France via 
    - Extraction du nom d'utilisateur Instagram
 
 3. **Détection des doublons** :
-   - Vérification automatique des doublons avec les résultats précédents et avec la base Airtable
+   - Vérification automatique des doublons avec les résultats précédents **et** avec la base Postgres
 
 4. **Sauvegarde et export** :
    - Génération d'un fichier JSON horodaté dans `./results`
-   - Script d'envoi des résultats vers Airtable (avec gestion des colonnes, dont "Ecommerce ?")
+   - Script d'envoi des résultats vers la db Postgres (append-only, pas d'upsert)
 
 ## Prérequis
 
 - Node.js (version 16 ou supérieure recommandée)
 - pnpm
-- Un compte Airtable et une base Airtable configurée
+- Une base de données Postgres
 
 ## Installation
 
@@ -51,21 +51,20 @@ Ce projet permet d'identifier des boutiques et sites à potentiel en France via 
 
 ## Configuration
 
-1. **Créez une base Airtable** avec les colonnes suivantes :
-   - `Nom` (nom Instagram, type Single line text)
-   - `Site web` (URL du site, type URL)
-   - `Ville` (Single line text)
-   - `Type de Commerce` (Single line text)
-   - `Statut` (Single select, ex : "Non contacté")
-   - `Ecommerce ?` (Checkbox)
-2. **Créez une clé API Airtable** (<https://airtable.com/developers/web/api/introduction>).
-3. **Récupérez l'ID de la base** et le nom de la table.
-4. **Configurez le fichier `.env`** :
+1. **Créez une table `Leads` dans votre db Postgres** avec les colonnes suivantes (snake_case) :
+   - `nom` (le handle Instagram, type text)
+   - `site_web` (URL du site, type text)
+   - `ville` (text)
+   - `type_de_commerce` (text)
+   - `statut` (text, ex : "Non contacté")
+   - `dernier_contact` (timestamp ou text)
+   - `email` (text, optionnel)
+   - `notes` (text, optionnel)
+
+2. **Configurez le fichier `.env`** avec la connexion à votre db Postgres :
 
    ```env
-   AIRTABLE_API_KEY=your_airtable_api_key
-   AIRTABLE_BASE_ID=your_base_id
-   AIRTABLE_TABLE_NAME=Shops
+   POSTGRES_URL=postgresql://<user>:<password>@<host>:<port>/<db>?sslmode=require
    ```
 
 ## Utilisation
@@ -80,34 +79,40 @@ node scripts/search.js
 
 Un fichier de résultats sera généré dans le dossier `results/`.
 
-### 2. Envoi des résultats vers Airtable
+### 2. Export des résultats vers Postgres
 
-Lancez le script d'upload :
+Lancez le script d'export :
 
 ```bash
-node scripts/airtable.js
+node scripts/export.js
 ```
 
-Le script va automatiquement envoyer le fichier de résultats le plus récent dans Airtable. Les doublons sont gérés automatiquement (pas d'envoi si déjà présent dans la base).
+Le script va automatiquement envoyer le fichier de résultats le plus récent dans la base Postgres. Les doublons sont gérés automatiquement (pas d'insertion si déjà présent dans la base).
 
 ### 3. Structure des résultats
 
 Chaque entrée contient :
 
-- Nom (Instagram)
+- Nom (Instagram, c'est le handle IG)
 - Site web
 - Ville
 - Type de Commerce
 - Statut (par défaut : Non contacté)
-- Ecommerce ? (détecté automatiquement selon le type de commerce)
+- Email (si disponible)
+- Notes (optionnel)
 
-Ces champs correspondent aux colonnes de votre base Airtable.
+**Important :**
+- Le champ `nom` contient le handle Instagram (pas l'URL complète). Pour reconstituer le lien IG :
+  `https://instagram.com/<nom>`
+- Il n'y a plus de colonne `instagram` dans la base.
 
 ## Personnalisation
 
 - Modifiez les types de commerces/sites ciblés dans `utils/constants.js` (`SHOP_TYPES`).
-- Adaptez la logique de détection e-commerce dans `scripts/airtable.js` ou `utils/airtableHelpers.js` si besoin.
 - Changez la zone de recherche dans `SEARCH_AREAS`.
+- Les scripts principaux sont :
+  - `scripts/search.js` (scraping & génération JSON)
+  - `scripts/export.js` (export Postgres)
 
 ## Tests
 

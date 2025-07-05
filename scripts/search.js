@@ -3,13 +3,10 @@
  */
 
 import * as dotenv from "dotenv";
+import kleur from "kleur";
 import minimist from "minimist";
 import fs from "node:fs";
 import pLimit from "p-limit";
-import {
-	fetchAirtableRecords,
-	isShopInAirtable,
-} from "../utils/airtableHelpers.js";
 import {
 	CONCURRENCY,
 	SCRAPING_DELAY,
@@ -21,6 +18,7 @@ import {
 	scrapeWebsiteForInstagram,
 } from "../utils/instaResolver.js";
 import { fetchWithWebsites } from "../utils/osmFetcher.js";
+import { fetchExistingLeads } from "../utils/postgresHelpers.js";
 import { ensureDir, latestFile, load, timeFile } from "../utils/storage.js";
 dotenv.config();
 
@@ -29,6 +27,25 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /* ===== MAIN ===== */
 async function main() {
+	console.log(
+		kleur.cyan().bold("\n========== Leadster - Recherche IG =========="),
+	);
+	// Récupérer les leads existants dans Neon/Postgres pour la déduplication
+	let existingLeads = [];
+	try {
+		existingLeads = await fetchExistingLeads();
+		console.log(
+			kleur.yellow(
+				`[Déduplication] ${existingLeads.length} leads récupérés depuis la db pour filtrage.`,
+			),
+		);
+	} catch (err) {
+		console.warn(
+			kleur.red("Impossible de récupérer les leads existants depuis la db :"),
+			err.message,
+		);
+	}
+
 	// CLI flags
 	const argv = minimist(process.argv.slice(2));
 	const area = argv.area
@@ -44,27 +61,26 @@ async function main() {
 	const mode = argv.mode || "ig"; // "ig" or "site+ig"
 	const htmlFallback = argv["html-fallback"] || false;
 
+	console.log(kleur.yellow(`Zones recherchées : ${area.join(", ")}`));
+	console.log(kleur.yellow(`Types recherchés : ${types.join(", ")}`));
+
 	const prev = load(latestFile());
-	const airtable = await fetchAirtableRecords();
-	const seen = new Set(
-		prev.map((s) => `${s.Nom || s.handle}|${s.Type_Commerce || s.type}`),
-	);
+	const seen = new Set([
+		// Ajout des résultats locaux (comme avant)
+		...prev.map((s) => `${s.Nom || s.handle}|${s.Type_Commerce || s.type}`),
+		// Ajout des leads existants dans Neon/Postgres
+		...existingLeads.map((l) => `${l.nom}|${l.type_de_commerce}`),
+	]);
 
 	// Nouvelle logique : on récupère tous les shops avec ou sans IG, mais avec site si dispo
 	const shops = await fetchWithWebsites(area, types);
+	console.log(kleur.yellow(`Shops trouvés (avant filtrage) : ${shops.length}`));
 	const limit = pLimit(CONCURRENCY);
 	const results = [];
 
 	for (const shop of shops) {
 		const hash = `${shop.handle || shop.website}|${shop.type}`;
 		if (seen.has(hash)) continue;
-		if (
-			isShopInAirtable(
-				{ Nom: shop.handle, URL_Site: shop.website, Type_Commerce: shop.type },
-				airtable,
-			)
-		)
-			continue;
 		seen.add(hash);
 
 		// Si IG présent
@@ -120,9 +136,18 @@ async function main() {
 			};
 		});
 		fs.writeFileSync(file, JSON.stringify(normalized, null, 2));
-		console.log(`Saved ${normalized.length} IG handles -> ${file}`);
+		console.log(
+			kleur.green(
+				`Nouveaux shops trouvés et sauvegardés : ${normalized.length}`,
+			),
+		);
+		console.log(kleur.green(`Fichier résultat : ${file}`));
 	} else {
-		console.log("No new IG handles found.");
+		console.log(
+			kleur.green(
+				"Aucun nouveau shop à ajouter : tout est déjà présent dans Neon ou dans les fichiers précédents.",
+			),
+		);
 	}
 }
 
