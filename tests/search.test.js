@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // Helpers à mocker (si besoin, sinon on testera la logique pure)
 function extractInstagramHandle(urlOrHandle) {
@@ -37,7 +37,11 @@ describe("Leadster - Normalisation JSON finale", () => {
 
 	it("IG URL → handle pur", () => {
 		const data = [
-			{ Nom: "https://instagram.com/pointdevue_lunel", Ville: "Lunel", Type_Commerce: "Opticien" },
+			{
+				Nom: "https://instagram.com/pointdevue_lunel",
+				Ville: "Lunel",
+				Type_Commerce: "Opticien",
+			},
 		];
 		const out = normalizeResults(data);
 		expect(out[0].Nom).toBe("pointdevue_lunel");
@@ -45,7 +49,12 @@ describe("Leadster - Normalisation JSON finale", () => {
 
 	it("Site web seul (pas d'IG)", () => {
 		const data = [
-			{ Nom: "", Ville: "Paris", Type_Commerce: "Café", URL_Site: "https://cafeparis.fr" },
+			{
+				Nom: "",
+				Ville: "Paris",
+				Type_Commerce: "Café",
+				URL_Site: "https://cafeparis.fr",
+			},
 		];
 		const out = normalizeResults(data);
 		expect(out[0].Nom).toBe("");
@@ -54,7 +63,12 @@ describe("Leadster - Normalisation JSON finale", () => {
 
 	it("IG handle + site web", () => {
 		const data = [
-			{ Nom: "brandparis", Ville: "Paris", Type_Commerce: "Mode", URL_Site: "https://brandparis.fr" },
+			{
+				Nom: "brandparis",
+				Ville: "Paris",
+				Type_Commerce: "Mode",
+				URL_Site: "https://brandparis.fr",
+			},
 		];
 		const out = normalizeResults(data);
 		expect(out[0].Nom).toBe("brandparis");
@@ -63,7 +77,12 @@ describe("Leadster - Normalisation JSON finale", () => {
 
 	it("IG URL + site web", () => {
 		const data = [
-			{ Nom: "https://www.instagram.com/brandparis", Ville: "Paris", Type_Commerce: "Mode", URL_Site: "https://brandparis.fr" },
+			{
+				Nom: "https://www.instagram.com/brandparis",
+				Ville: "Paris",
+				Type_Commerce: "Mode",
+				URL_Site: "https://brandparis.fr",
+			},
 		];
 		const out = normalizeResults(data);
 		expect(out[0].Nom).toBe("brandparis");
@@ -71,9 +90,7 @@ describe("Leadster - Normalisation JSON finale", () => {
 	});
 
 	it("Shop sans IG ni site n'est pas inclus (filtrage amont)", () => {
-		const data = [
-			{ Nom: "", Ville: "Lyon", Type_Commerce: "Fleuriste" },
-		];
+		const data = [{ Nom: "", Ville: "Lyon", Type_Commerce: "Fleuriste" }];
 		const out = normalizeResults(data);
 		// Ici, il est dans le tableau, mais la logique du pipeline ne l'ajoute pas
 		expect(out[0].Nom).toBe("");

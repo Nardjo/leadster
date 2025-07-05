@@ -2,9 +2,9 @@
  * Leadster - Script to find shops in France with Instagram presence
  */
 
-import fs from "node:fs";
 import * as dotenv from "dotenv";
 import minimist from "minimist";
+import fs from "node:fs";
 import pLimit from "p-limit";
 import {
 	fetchAirtableRecords,
