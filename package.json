@@ -1,36 +1,35 @@
 {
-	"name": "leadster",
-	"version": "1.0.0",
-	"description": "Script to find shops in France with Instagram presence",
-	"main": "dist/scripts/search.js",
-	"scripts": {
-		"search": "tsx ./scripts/search.ts",
-		"export": "tsx ./scripts/export.ts",
-		"lint": "biome check --fix --unsafe",
-		"format": "biome format --write .",
-		"typecheck": "tsc --noEmit",
-		"build": "tsc",
-		"test": "vitest"
-	},
-	"dependencies": {
-		"axios": "^1.6.2",
-		"axios-retry": "^4.5.0",
-		"cheerio": "^1.0.0-rc.12",
-		"dotenv": "^16.3.1",
-		"kleur": "^4.1.5",
-		"minimist": "^1.2.8",
-		"p-limit": "^6.2.0",
-		"pg": "^8.16.3",
-		"ts-node": "^10.9.2"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
-		"@types/minimist": "^1.2.5",
-		"@types/node": "^24.0.10",
-		"@types/pg": "^8.15.4",
-		"tsx": "^4.20.3",
-		"typescript": "^5.8.3",
-		"vitest": "^1.0.0"
-	},
-	"type": "module"
+  "name": "leadster",
+  "version": "1.0.0",
+  "description": "Script to find shops in France with Instagram presence",
+  "main": "dist/scripts/search.js",
+  "scripts": {
+    "search": "tsx ./scripts/search.ts",
+    "export": "tsx ./scripts/export.ts",
+    "lint": "biome check --fix --unsafe",
+    "format": "biome format --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "axios-retry": "^4.5.0",
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.3.1",
+    "kleur": "^4.1.5",
+    "minimist": "^1.2.8",
+    "p-limit": "^6.2.0",
+    "pg": "^8.16.3",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/minimist": "^1.2.5",
+    "@types/node": "^24.0.10",
+    "@types/pg": "^8.15.4",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^1.0.0"
+  },
+  "type": "module"
 }
