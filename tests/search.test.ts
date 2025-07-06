@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 // Helpers à mocker (si besoin, sinon on testera la logique pure)
-function extractInstagramHandle(urlOrHandle) {
+function extractInstagramHandle(urlOrHandle: string): string {
 	if (!urlOrHandle) return "";
 	if (urlOrHandle.startsWith("http")) {
 		const m = urlOrHandle.match(/instagram\.com\/([A-Za-z0-9_.-]+)/);
@@ -10,8 +10,8 @@ function extractInstagramHandle(urlOrHandle) {
 	return urlOrHandle;
 }
 
-function normalizeResults(results) {
-	return results.map((r) => {
+function normalizeResults(results: any[]): any[] {
+	return results.map((r: any) => {
 		let nom = r.Nom;
 		if (typeof nom === "string" && nom.startsWith("http")) {
 			nom = extractInstagramHandle(nom) || nom;

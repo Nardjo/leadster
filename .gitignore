@@ -27,6 +27,9 @@ pnpm-debug.log*
 *.sw?
 .DS_Store
 
+# Build output
+dist/
+
 # Fichier de configuration locale (non versionné)
 utils/constants.js
 results/*

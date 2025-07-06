@@ -31,13 +31,13 @@ export function latestFile() {
 	return path.join(dir, files[0]);
 }
 
-export function load(f) {
+export function load(f: string): any[] {
 	if (!f || !fs.existsSync(f)) return [];
 	return JSON.parse(fs.readFileSync(f, "utf8"));
 }
 
 export function timeFile() {
 	const d = new Date();
-	const p = (n) => String(n).padStart(2, "0");
+	const p = (n: number) => String(n).padStart(2, "0");
 	return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}.json`;
 }

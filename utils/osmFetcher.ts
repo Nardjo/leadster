@@ -1,7 +1,7 @@
-import axios from "axios";
-import axiosRetry from "axios-retry";
-import { RETRY_COUNT, RETRY_DELAY_MS, SHOP_TYPES } from "./constants.js";
-import { extractInstagramHandle } from "./instaResolver.js";
+import axios from "axios"
+import axiosRetry from "axios-retry"
+import { RETRY_COUNT, RETRY_DELAY_MS, SHOP_TYPES } from "./constants.js"
+import { extractInstagramHandle } from "./instaResolver.js"
 
 axiosRetry(axios, {
 	retries: RETRY_COUNT,
@@ -11,7 +11,14 @@ axiosRetry(axios, {
 		err.code === "ECONNABORTED",
 });
 
-export async function fetchWithWebsites(areaNames, types) {
+export interface Shop {
+  handle: string | null;
+  website: string | null;
+  ville: string;
+  type: string;
+}
+
+export async function fetchWithWebsites(areaNames: string[], types: string[]): Promise<Shop[]> {
 	const areaParts = areaNames.map(
 		(name, i) => `area["name"="${name}"]["admin_level"~"[2-9]"]->.a${i};`,
 	);
@@ -40,10 +47,10 @@ export async function fetchWithWebsites(areaNames, types) {
 			{ headers: { "Content-Type": "application/x-www-form-urlencoded" } },
 		);
 		if (!data?.elements) return [];
-		const results = [];
+		const results: Shop[] = [];
 		for (const e of data.elements) {
 			if (!e.tags) continue;
-			let typeLbl;
+			let typeLbl: string | undefined;
 			for (const { tag, label } of SHOP_TYPES) {
 				const [k, v] = tag.split("=");
 				if (e.tags[k] === v) {
@@ -58,20 +65,24 @@ export async function fetchWithWebsites(areaNames, types) {
 			const website = e.tags["website"] || e.tags["contact:website"] || null;
 			const city = e.tags["addr:city"] || e.tags["addr:postcode"] || "";
 			results.push({
-				handle: igHandle,
-				website,
-				ville: city,
-				type: typeLbl,
-			});
+        handle: igHandle as string | null,
+        website,
+        ville: city,
+        type: typeLbl as string,
+      });
 		}
 		return results;
 	} catch (err) {
-		console.error("Overpass fail", err.message);
+		if (err instanceof Error) {
+			console.error("Overpass fail", err.message);
+		} else {
+			console.error("Overpass fail", err);
+		}
 		return [];
 	}
 }
 
-export async function fetchIGOnly(areaNames, types) {
+export async function fetchIGOnly(areaNames: string[], types: string[]): Promise<Shop[]> {
 	// areaNames: array of area names
 	// types: array of shop type labels
 	const areaParts = areaNames.map(
@@ -104,10 +115,10 @@ export async function fetchIGOnly(areaNames, types) {
 			{ headers: { "Content-Type": "application/x-www-form-urlencoded" } },
 		);
 		if (!data?.elements) return [];
-		const results = [];
+		const results: Shop[] = [];
 		for (const e of data.elements) {
 			if (!e.tags) continue;
-			let typeLbl;
+			let typeLbl: string | undefined;
 			for (const { tag, label } of SHOP_TYPES) {
 				const [k, v] = tag.split("=");
 				if (e.tags[k] === v) {
@@ -125,12 +136,16 @@ export async function fetchIGOnly(areaNames, types) {
 			}
 			const city = e.tags["addr:city"] || e.tags["addr:postcode"] || "";
 			if (igHandle) {
-				results.push({ handle: igHandle, ville: city, type: typeLbl });
+				results.push({ handle: igHandle as string, ville: city, type: typeLbl as string, website: null });
 			}
 		}
 		return results;
 	} catch (err) {
-		console.error("Overpass fail", err.message);
+		if (err instanceof Error) {
+			console.error("Overpass fail", err.message);
+		} else {
+			console.error("Overpass fail", err);
+		}
 		return [];
 	}
 }

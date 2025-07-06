@@ -38,7 +38,7 @@ export async function fetchExistingLeads() {
 	}
 }
 
-export async function insertLeads(data) {
+export async function insertLeads(data: any[]): Promise<number> {
 	if (!Array.isArray(data) || data.length === 0) return 0;
 
 	// Only keep expected columns

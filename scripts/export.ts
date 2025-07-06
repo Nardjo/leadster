@@ -58,7 +58,11 @@ function findMostRecentResultsFile() {
 
 		return path.join(resultsDir, files[0]);
 	} catch (error) {
-		console.error("Error finding most recent results file:", error.message);
+		if (error instanceof Error) {
+  console.error("Error finding most recent results file:", error.message);
+} else {
+  console.error("Error finding most recent results file:", error);
+}
 		return null;
 	}
 }
@@ -68,7 +72,7 @@ function findMostRecentResultsFile() {
  * @param {string} filePath - Path to the JSON file
  * @returns {Array} - Array of objects from the JSON file or empty array if file doesn't exist
  */
-function loadDataFromFile(filePath) {
+function loadDataFromFile(filePath: string): any[] {
 	try {
 		if (!filePath || !fs.existsSync(filePath)) {
 			return [];
@@ -77,7 +81,11 @@ function loadDataFromFile(filePath) {
 		const data = fs.readFileSync(filePath, "utf8");
 		return JSON.parse(data);
 	} catch (error) {
-		console.error(`Error loading data from ${filePath}:`, error.message);
+		if (error instanceof Error) {
+  console.error(`Error loading data from ${filePath}:`, error.message);
+} else {
+  console.error(`Error loading data from ${filePath}:`, error);
+}
 		return [];
 	}
 }
@@ -99,7 +107,11 @@ function listResultsFiles() {
 			return bTime - aTime; // Sort by newest first
 		});
 	} catch (error) {
-		console.error("Error listing results files:", error.message);
+		if (error instanceof Error) {
+  console.error("Error listing results files:", error.message);
+} else {
+  console.error("Error listing results files:", error);
+}
 		return [];
 	}
 }
@@ -121,9 +133,9 @@ function createReadlineInterface() {
  * @param {string} question - Question to ask
  * @returns {Promise<string>} - User's answer
  */
-function askQuestion(rl, question) {
+function askQuestion(rl: import('readline').Interface, question: string): Promise<string> {
 	return new Promise((resolve) => {
-		rl.question(question, (answer) => {
+		rl.question(question, (answer: string) => {
 			resolve(answer);
 		});
 	});
@@ -161,7 +173,7 @@ async function main() {
 		console.log(`Loaded ${data.length} shops from ${path.basename(filePath)}.`);
 
 		// Adapter les champs au snake_case pour la table Leads
-		const mapped = data.map((shop) => ({
+		const mapped = data.map((shop: any) => ({
 			nom: shop.Nom,
 			site_web: shop.URL_Site,
 			ville: shop.Ville,
@@ -173,7 +185,11 @@ async function main() {
 		}));
 		await insertLeads(mapped);
 	} catch (error) {
-		console.error("An error occurred:", error.message);
+		if (error instanceof Error) {
+  console.error("An error occurred:", error.message);
+} else {
+  console.error("An error occurred:", error);
+}
 	}
 }
 

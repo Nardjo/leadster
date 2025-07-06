@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 
-export function extractInstagramHandle(url) {
+export function extractInstagramHandle(url: string): string | null {
 	let cleanUrl = url;
 	if (cleanUrl.endsWith("/")) cleanUrl = cleanUrl.slice(0, -1);
 	const m = cleanUrl.match(/instagram\.com\/([A-Za-z0-9_.-]+)/);
@@ -15,7 +15,7 @@ export async function scrapeWebsiteForInstagram({
 	city,
 	postcode,
 	type,
-}) {
+}: { website: string; city?: string; postcode?: string; type?: string }): Promise<any> {
 	try {
 		const { data } = await axios.get(website, {
 			timeout: 10_000,
@@ -42,7 +42,11 @@ export async function scrapeWebsiteForInstagram({
 				Type_Commerce: type,
 			};
 	} catch (e) {
+		if (e instanceof Error) {
 		console.warn(`Scrape ${website} -> ${e.message}`);
+	} else {
+		console.warn(`Scrape ${website} ->`, e);
+	}
 	}
 	return null;
 }
