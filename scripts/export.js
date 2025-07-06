@@ -135,7 +135,7 @@ async function main() {
 	try {
 		// const rl = createReadlineInterface();
 
-		console.log("Leadster - Export vers Neon/Postgres");
+		console.log("Leadster - Export vers la db");
 		console.log("--------------------------------");
 
 		// Utiliser toujours le fichier le plus récent

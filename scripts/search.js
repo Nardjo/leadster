@@ -30,7 +30,7 @@ async function main() {
 	console.log(
 		kleur.cyan().bold("\n========== Leadster - Recherche IG =========="),
 	);
-	// Récupérer les leads existants dans Neon/Postgres pour la déduplication
+	// Récupérer les leads existants dans la db pour la déduplication
 	let existingLeads = [];
 	try {
 		existingLeads = await fetchExistingLeads();
@@ -68,7 +68,7 @@ async function main() {
 	const seen = new Set([
 		// Ajout des résultats locaux (comme avant)
 		...prev.map((s) => `${s.Nom || s.handle}|${s.Type_Commerce || s.type}`),
-		// Ajout des leads existants dans Neon/Postgres
+		// Ajout des leads existants dans la db
 		...existingLeads.map((l) => `${l.nom}|${l.type_de_commerce}`),
 	]);
 

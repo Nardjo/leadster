@@ -4,7 +4,7 @@
 	"description": "Script to find shops in France with Instagram presence",
 	"main": "scripts/search.js",
 	"scripts": {
-		"start": "node ./scripts/search.js",
+		"search": "node ./scripts/search.js",
 		"export": "node ./scripts/export.js",
 		"lint": "biome check --fix --unsafe",
 		"format": "biome format --write .",
