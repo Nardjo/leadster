@@ -59,10 +59,10 @@ function findMostRecentResultsFile() {
 		return path.join(resultsDir, files[0]);
 	} catch (error) {
 		if (error instanceof Error) {
-  console.error("Error finding most recent results file:", error.message);
-} else {
-  console.error("Error finding most recent results file:", error);
-}
+			console.error("Error finding most recent results file:", error.message);
+		} else {
+			console.error("Error finding most recent results file:", error);
+		}
 		return null;
 	}
 }
@@ -72,7 +72,15 @@ function findMostRecentResultsFile() {
  * @param {string} filePath - Path to the JSON file
  * @returns {Array} - Array of objects from the JSON file or empty array if file doesn't exist
  */
-function loadDataFromFile(filePath: string): any[] {
+type ShopData = {
+	Nom: string;
+	URL_Site?: string;
+	Ville: string;
+	Type_Commerce: string;
+	Email?: string;
+};
+
+function loadDataFromFile(filePath: string): ShopData[] {
 	try {
 		if (!filePath || !fs.existsSync(filePath)) {
 			return [];
@@ -82,10 +90,10 @@ function loadDataFromFile(filePath: string): any[] {
 		return JSON.parse(data);
 	} catch (error) {
 		if (error instanceof Error) {
-  console.error(`Error loading data from ${filePath}:`, error.message);
-} else {
-  console.error(`Error loading data from ${filePath}:`, error);
-}
+			console.error(`Error loading data from ${filePath}:`, error.message);
+		} else {
+			console.error(`Error loading data from ${filePath}:`, error);
+		}
 		return [];
 	}
 }
@@ -108,10 +116,10 @@ function listResultsFiles() {
 		});
 	} catch (error) {
 		if (error instanceof Error) {
-  console.error("Error listing results files:", error.message);
-} else {
-  console.error("Error listing results files:", error);
-}
+			console.error("Error listing results files:", error.message);
+		} else {
+			console.error("Error listing results files:", error);
+		}
 		return [];
 	}
 }
@@ -133,7 +141,10 @@ function createReadlineInterface() {
  * @param {string} question - Question to ask
  * @returns {Promise<string>} - User's answer
  */
-function askQuestion(rl: import('readline').Interface, question: string): Promise<string> {
+function askQuestion(
+	rl: import("readline").Interface,
+	question: string,
+): Promise<string> {
 	return new Promise((resolve) => {
 		rl.question(question, (answer: string) => {
 			resolve(answer);
@@ -173,23 +184,20 @@ async function main() {
 		console.log(`Loaded ${data.length} shops from ${path.basename(filePath)}.`);
 
 		// Adapter les champs au snake_case pour la table Leads
-		const mapped = data.map((shop: any) => ({
-			nom: shop.Nom,
-			site_web: shop.URL_Site,
-			ville: shop.Ville,
-			type_de_commerce: shop.Type_Commerce,
-			statut: "Non contacté",
-			dernier_contact: null,
-			email: shop.Email || null,
-			notes: null,
+		const mapped = data.map((shop: ShopData) => ({
+			Nom: shop.Nom,
+			Ville: shop.Ville,
+			Type_Commerce: shop.Type_Commerce,
+			URL_Site: shop.URL_Site,
+			Email: shop.Email || undefined,
 		}));
 		await insertLeads(mapped);
 	} catch (error) {
 		if (error instanceof Error) {
-  console.error("An error occurred:", error.message);
-} else {
-  console.error("An error occurred:", error);
-}
+			console.error("An error occurred:", error.message);
+		} else {
+			console.error("An error occurred:", error);
+		}
 	}
 }
 

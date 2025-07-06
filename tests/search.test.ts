@@ -10,8 +10,15 @@ function extractInstagramHandle(urlOrHandle: string): string {
 	return urlOrHandle;
 }
 
-function normalizeResults(results: any[]): any[] {
-	return results.map((r: any) => {
+type ShopData = {
+	Nom: string;
+	Ville: string;
+	Type_Commerce: string;
+	URL_Site?: string;
+};
+
+function normalizeResults(results: ShopData[]): ShopData[] {
+	return results.map((r: ShopData) => {
 		let nom = r.Nom;
 		if (typeof nom === "string" && nom.startsWith("http")) {
 			nom = extractInstagramHandle(nom) || nom;

@@ -38,7 +38,18 @@ export async function fetchExistingLeads() {
 	}
 }
 
-export async function insertLeads(data: any[]): Promise<number> {
+type ShopData = {
+	Nom: string;
+	URL_Site?: string;
+	Ville: string;
+	Type_Commerce: string;
+	Email?: string;
+	handle?: string;
+	type?: string;
+	[key: string]: unknown;
+};
+
+export async function insertLeads(data: ShopData[]): Promise<number> {
 	if (!Array.isArray(data) || data.length === 0) return 0;
 
 	// Only keep expected columns

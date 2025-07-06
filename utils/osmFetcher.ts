@@ -1,7 +1,7 @@
-import axios from "axios"
-import axiosRetry from "axios-retry"
-import { RETRY_COUNT, RETRY_DELAY_MS, SHOP_TYPES } from "./constants.js"
-import { extractInstagramHandle } from "./instaResolver.js"
+import axios from "axios";
+import axiosRetry from "axios-retry";
+import { RETRY_COUNT, RETRY_DELAY_MS, SHOP_TYPES } from "./constants.js";
+import { extractInstagramHandle } from "./instaResolver.js";
 
 axiosRetry(axios, {
 	retries: RETRY_COUNT,
@@ -12,13 +12,16 @@ axiosRetry(axios, {
 });
 
 export interface Shop {
-  handle: string | null;
-  website: string | null;
-  ville: string;
-  type: string;
+	handle: string | null;
+	website: string | null;
+	ville: string;
+	type: string;
 }
 
-export async function fetchWithWebsites(areaNames: string[], types: string[]): Promise<Shop[]> {
+export async function fetchWithWebsites(
+	areaNames: string[],
+	types: string[],
+): Promise<Shop[]> {
 	const areaParts = areaNames.map(
 		(name, i) => `area["name"="${name}"]["admin_level"~"[2-9]"]->.a${i};`,
 	);
@@ -65,11 +68,11 @@ export async function fetchWithWebsites(areaNames: string[], types: string[]): P
 			const website = e.tags["website"] || e.tags["contact:website"] || null;
 			const city = e.tags["addr:city"] || e.tags["addr:postcode"] || "";
 			results.push({
-        handle: igHandle as string | null,
-        website,
-        ville: city,
-        type: typeLbl as string,
-      });
+				handle: igHandle as string | null,
+				website,
+				ville: city,
+				type: typeLbl as string,
+			});
 		}
 		return results;
 	} catch (err) {
@@ -82,7 +85,10 @@ export async function fetchWithWebsites(areaNames: string[], types: string[]): P
 	}
 }
 
-export async function fetchIGOnly(areaNames: string[], types: string[]): Promise<Shop[]> {
+export async function fetchIGOnly(
+	areaNames: string[],
+	types: string[],
+): Promise<Shop[]> {
 	// areaNames: array of area names
 	// types: array of shop type labels
 	const areaParts = areaNames.map(
@@ -136,7 +142,12 @@ export async function fetchIGOnly(areaNames: string[], types: string[]): Promise
 			}
 			const city = e.tags["addr:city"] || e.tags["addr:postcode"] || "";
 			if (igHandle) {
-				results.push({ handle: igHandle as string, ville: city, type: typeLbl as string, website: null });
+				results.push({
+					handle: igHandle as string,
+					ville: city,
+					type: typeLbl as string,
+					website: null,
+				});
 			}
 		}
 		return results;

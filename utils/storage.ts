@@ -31,7 +31,17 @@ export function latestFile() {
 	return path.join(dir, files[0]);
 }
 
-export function load(f: string): any[] {
+type ShopData = {
+	Nom: string;
+	URL_Site?: string;
+	Ville: string;
+	Type_Commerce: string;
+	Email?: string;
+	handle?: string;
+	type?: string;
+};
+
+export function load(f: string): ShopData[] {
 	if (!f || !fs.existsSync(f)) return [];
 	return JSON.parse(fs.readFileSync(f, "utf8"));
 }
